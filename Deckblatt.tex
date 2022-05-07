@@ -1,0 +1,66 @@
+\documentstyle[german,umlaute]{article}
+\inputencoding{utf8}
+
+% --------- Konfiguration ------------------------------
+% EIGENE DATEN HIER EINTRAGEN!
+\def\TITEL{{\bf Masterarbeit}\\[.5cm]
+Titel der Arbeit}
+\def\AUTOR{Autor}
+\def\BEGINN{Beginn}
+\def\DATUM{Ende}
+\def\NUMMER{}
+\def\EMAIL{vorname.nachname@fau.de}
+% ------------------------------------------------------
+
+\textheight 250mm
+\textwidth 180mm
+
+\begin{document}
+
+{\thispagestyle{empty}
+
+\vspace*{-1.5cm}
+
+\hspace*{2.1cm}
+\vbox to 40mm{\vskip-2ex\parbox{80mm}{
+\begin{center}\xivpt\sf
+\TITEL
+\end{center}}
+\vskip-2ex\vfill
+\parbox{80mm}{\begin{center}\xiipt\sf
+\AUTOR
+\end{center}}
+\vfill\vfill\vfill
+\parbox{80mm}{\begin{center}\xiipt\sf
+\DATUM
+\end{center}}
+}
+
+
+\vspace*{3cm}
+
+\hspace*{2.2cm}
+\begin{minipage}{10cm}
+\xiipt\sf
+Beginn: \BEGINN \\[.3cm]
+Abgabe: \DATUM
+\end{minipage}
+
+\vspace*{6.8cm}
+
+\hspace*{2.2cm}
+\begin{minipage}{10cm}
+\xiipt\sf
+Anschrift: \\[2mm]
+Graphische Datenverarbeitung\\
+Cauerstra\ss{}e 11\\
+91058 Erlangen\\
+Germany\\[2mm]
+\xpt\sf
+Tel: 09131/85-29919\\
+Fax: 09131/85-29931\\
+E-Mail: \EMAIL
+\end{minipage}
+}\newpage
+
+\end{document}
