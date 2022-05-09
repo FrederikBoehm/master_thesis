@@ -3,14 +3,25 @@
 
 \section{Motivation}
 \label{sect:motivation}
-
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=0.9\linewidth]{image.jpg}
-	\caption{caption.}
-	\label{img:example}
-\end{figure}
+In recent years computer hardware became increasingly powerful, allowing now even real time raytracing with the introduction of the RTX technology by NVIDIA in 2018 \cite[pp. 31 - 38]{turing_whitepaper}.
+In parallel to the advances in computer hardware the scenes to be rendered also became more and more complex reaching more than 70 GB for a single shot in the film Coco \cite{pixarxpu}.
+While high detailed geometry and textures are required for close-up shots they impair performance when rendering them at large distances like in a landscape scene.
+This is because rays have to be intersected with all triangles in an AABB regardless of the distance to the camera.
+Additionally having high detailed geometry and textures at distance is prone to aliasing due to undersampling \cite[pp. 409-410]{pbr}.
+According to the Nyquist-Shannon sampling theorem we can avoid this aliasing as long as our sampling frequency is twice as high as the maximum frequency in the signal \cite[p. 11]{shannonsampling}.
+Therefore we could increase the number of rays that are traced per pixel.
+However this would lead to even worse performance.
+The other option is to reduce the frequency of the signal.
+For geometry this is typically accomplished by simplifying a detailed mesh in a preprocess to rendering \cite[pp. 706 - 712]{realtime} or by generating new triangles on the fly using tessellation \cite[pp. 767 - 781]{realtime}.
+The usual approach to reduce the frequency in textures is to use mipmapping \cite[pp. 265 - 267]{fundamentals}.
+In this thesis we explore another approach for level of detail rendering by representing geometry and color by volumes.
 
 \section{Challenges}
 
+
 \section{Contributions}
+The thesis provides answers to the following questions:
+\begin{itemize}
+	\item Can meshes be represented by volumes without a noticeable loss in quality?
+	\item How does the performance change when representing meshes by volumes at different distances?
+\end{itemize}

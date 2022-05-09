@@ -1,3 +1,153 @@
+@techreport{turing_whitepaper,
+  author      = {NVIDIA},
+  title       = {NVIDIA TURING GPU ARCHITECTURE},
+  year        = {2018},
+  url = {https://images.nvidia.com/aem-dam/en-zz/Solutions/design-visualization/technologies/turing-architecture/NVIDIA-Turing-Architecture-Whitepaper.pdf},
+  urldate = {2022-05-09}
+}
+
+@online{pixarxpu,
+ author = {Pixar},
+ title = {RenderMan XPU: Development Update},
+  url = {https://renderman.pixar.com/news/renderman-xpu-development-update},
+ urldate = {2022-05-07},
+ year = {2018}
+}
+
+@book{pbr,
+  title={Physically Based Rendering: From Theory to Implementation},
+  author={Matt Pharr and Wenzel Jakob and Greg Humphreys},
+  isbn={9780128006450},
+  year={2004},
+  edition={3},
+  publisher={Morgan Kaufmann}
+}
+
+@article{shannonsampling,
+author={Shannon, C.E.},
+journal={Proceedings of the IRE}, 
+title={Communication in the Presence of Noise}, 
+year={1949},
+volume={37},
+number={1},
+pages={10-21},
+doi={10.1109/JRPROC.1949.232969},
+ }
+
+@book{realtime,
+  title={Real-Time Rendering},
+  author={Tomas Akenine-Möller and Eric Haines and Naty Hoffman and Angelo Pesce and Michał Iwanicki and Sébastien Hillaire},
+  isbn={9781138627000},
+  year={2019},
+  edition={4},
+  publisher={CRC Press}
+}
+
+@book{fundamentals,
+  title={Fundamentals of Computer Graphics},
+  author={Steve Marschner and Peter Shirley},
+  isbn={9781482229394},
+  year={2015},
+  edition={4},
+  publisher={CRC Press}
+}
+
+@article{sggx,
+author = {Heitz, Eric and Dupuy, Jonathan and Crassin, Cyril and Dachsbacher, Carsten},
+title = {The SGGX Microflake Distribution},
+year = {2015},
+issue_date = {August 2015},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {34},
+number = {4},
+issn = {0730-0301},
+url = {https://doi.org/10.1145/2766988},
+doi = {10.1145/2766988},
+abstract = {We introduce the Symmetric GGX (SGGX) distribution to represent spatially-varying properties of anisotropic microflake participating media. Our key theoretical insight is to represent a microflake distribution by the projected area of the microflakes. We use the projected area to parameterize the shape of an ellipsoid, from which we recover a distribution of normals. The representation based on the projected area allows for robust linear interpolation and prefiltering, and thanks to its geometric interpretation, we derive closed form expressions for all operations used in the microflake framework. We also incorporate microflakes with diffuse reflectance in our theoretical framework.This allows us to model the appearance of rough diffuse materials in addition to rough specular materials. Finally, we use the idea of sampling the distribution of visible normals to design a perfect importance sampling technique for our SGGX microflake phase functions. It is analytic, deterministic, simple to implement, and one order of magnitude faster than previous work.},
+journal = {ACM Trans. Graph.},
+month = {jul},
+articleno = {48},
+numpages = {11},
+keywords = {light transport, microflake theory, global illumination}
+}
+
+@inproceedings{microflake,
+author = {Jakob, Wenzel and Arbree, Adam and Moon, Jonathan T. and Bala, Kavita and Marschner, Steve},
+title = {A Radiative Transfer Framework for Rendering Materials with Anisotropic Structure},
+year = {2010},
+isbn = {9781450302104},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1833349.1778790},
+doi = {10.1145/1833349.1778790},
+abstract = {The radiative transfer framework that underlies all current rendering of volumes is limited to scattering media whose properties are invariant to rotation. Many systems allow for "anisotropic scattering," in the sense that scattered intensity depends on the scattering angle, but the standard equation assumes that the structure of the medium is isotropic. This limitation impedes physics-based rendering of volume models of cloth, hair, skin, and other important volumetric or translucent materials that do have anisotropic structure. This paper presents an end-to-end formulation of physics-based volume rendering of anisotropic scattering structures, allowing these materials to become full participants in global illumination simulations.We begin with a generalized radiative transfer equation, derived from scattering by oriented non-spherical particles. Within this framework, we propose a new volume scattering model analogous to the well-known family of microfacet surface reflection models; we derive an anisotropic diffusion approximation, including the weak form required for finite element solution and a way to compute the diffusion matrix from the parameters of the scattering model; and we also derive a new anisotropic dipole BSSRDF for anisotropic translucent materials. We demonstrate results from Monte Carlo, finite element, and dipole simulations. All these contributions are readily implemented in existing rendering systems for volumes and translucent materials, and they all reduce to the standard practice in the isotropic case.},
+booktitle = {ACM SIGGRAPH 2010 Papers},
+articleno = {53},
+numpages = {13},
+keywords = {light transport, diffusion theory, finite element method, anisotropy, subsurface scattering, dipole model, BSSRDF},
+location = {Los Angeles, California},
+series = {SIGGRAPH '10}
+}
+
+@inproceedings{ggx,
+  author          = {Bruce Walter and Stephen R. Marschner and Hongsong Li and Kenneth E. Torrance},
+  title           = {Microfacet Models for Refraction through Rough Surfaces},
+  year            = {2007},
+  booktitle       = {Proceedings of EGSR 2007},
+}
+
+@article{vndf_importance_sampling,
+  TITLE = {{Importance Sampling Microfacet-Based BSDFs using the Distribution of Visible Normals}},
+  AUTHOR = {Heitz, Eric and D'Eon, Eugene},
+  URL = {https://hal.inria.fr/hal-00996995},
+  JOURNAL = {{Computer Graphics Forum}},
+  PUBLISHER = {{Wiley}},
+  YEAR = {2014},
+  MONTH = Jun,
+  PDF = {https://hal.inria.fr/hal-00996995v1/file/article.pdf},
+  HAL_ID = {hal-00996995},
+  HAL_VERSION = {v1},
+}
+
+@article{hybrid_mesh_volume_lods,
+  TITLE = {{Hybrid mesh-volume LoDs for all-scale pre-filtering of complex 3D assets}},
+  AUTHOR = {Loubet, Guillaume and Neyret, Fabrice},
+  URL = {https://hal.archives-ouvertes.fr/hal-01468817},
+  JOURNAL = {{Computer Graphics Forum}},
+  PUBLISHER = {{Wiley}},
+  VOLUME = {36},
+  NUMBER = {2},
+  PAGES = {431--442},
+  YEAR = {2017},
+  DOI = {10.1111/cgf.13138},
+  KEYWORDS = {path tracing ; rendering ; LoD ; mesh ; trees ; volume ; hybrid},
+  PDF = {https://hal.archives-ouvertes.fr/hal-01468817/file/paper.pdf},
+  HAL_ID = {hal-01468817},
+  HAL_VERSION = {v1},
+}
+
+@Inbook{brick_grid,
+author="Hofmann, Nikolai
+and Evans, Alex",
+editor="Marrs, Adam
+and Shirley, Peter
+and Wald, Ingo",
+title="Efficient Unbiased Volume Path Tracing on the GPU",
+bookTitle="Ray Tracing Gems II: Next Generation Real-Time Rendering with DXR, Vulkan, and OptiX",
+year="2021",
+publisher="Apress",
+address="Berkeley, CA",
+pages="699--711",
+abstract="We present a set of optimizations that improve the performance of high-quality volumetric path tracing. We build upon unbiased volume sampling techniques, i.e., null-collision trackers [16, 8, 15], with voxel data stored in an OpenVDB [14, 13] tree. The presented optimizations achieve an overall 2* to 3* speedup when implemented on a modern GPU, with an approximately 6.5* reduction in memory footprint. The improvements primarily stem from a multi-level digital differential analyzer (DDA) [1, 11, 6] to step through a grid of precomputed bounds; a replacement of the top levels of the OpenVDB tree with a dense indirection texture, similar to virtual textures [3, 4, 17], while preserving some sparsity; and quantization of the voxel data, encoded using GPU-supported block compression. Finally, we examine the isolated effect of our optimizations, covering stochastic filtering, the use of dense indirection textures, compressed voxel data, and singleversus multi-level DDAs.",
+isbn="978-1-4842-7185-8",
+doi="10.1007/978-1-4842-7185-8_43",
+url="https://doi.org/10.1007/978-1-4842-7185-8_43"
+}
+
+
+
+
 @INPROCEEDINGS{6678395,
 author={R. Khilar and S. Chitrakala and S. SelvamParvathy},
 booktitle={2013 International Conference on Optical Imaging Sensor and Security (ICOSS)},

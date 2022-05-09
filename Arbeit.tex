@@ -52,6 +52,8 @@ bibencoding=utf8
 \usetikzlibrary{positioning}
 \usetikzlibrary{calc}
 
+\usepackage{acronym}
+
 % danke, daniel:
 \lstdefinelanguage{CUDA}{morekeywords={
 	__device__, __global__, __host__, __constant__, __shared__, __noinline__,
@@ -168,6 +170,7 @@ bibencoding=utf8
 
 \setcounter{secnumdepth}{3}
 
+
 \begin{document}
 
 
@@ -190,6 +193,7 @@ bibencoding=utf8
 % Inhaltsverzeichnis
 \tableofcontents
 
+\input{Abbreviations.tex}
 
 % eine Leerseite
 \cleardoublepage
