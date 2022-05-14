@@ -22,7 +22,7 @@ When we repeat this process a large number of times we still get the same result
 
 \section{Volumetric path-tracing}
 Since we want to represent our \acsp{lod} by volumes the following chapter introduces how path-tracing can be extended to volumes.
-\subsection{Theory of light propagation in participating media}
+\subsection{Theory of Light Propagation in Participating Media}
 \label{subsec:theory_of_light_propagation_in_participating_media}
 For volumes the radiance along a ray is determined by the in- and out-scattering as well as the emission and absorption properties of the medium \cite[p. 3]{novak_overview}.
 \begin{figure}[!ht]
@@ -63,6 +63,7 @@ The idea of this \textit{volume rendering equation} is that a ray passing throug
 Therefore the radiance $L$ emitted and reflected from this surface is attenuated by the volume transmittance $T$ \cite[p. 889]{pbr}.
 
 \subsection{Solving the Beer-Lambert law in heterogeneous media}
+\label{subsec:solving_beer_lambert_law_in_heterogeneous_media}
 As described in section \ref{subsec:theory_of_light_propagation_in_participating_media} effects like scattering and absoption occur when light interacts with the particles of a medium.
 We therefore need a way to sample interactions on which the light than is scattered or absorbed.
 On a distance $t=||\boldsymbol{x} - \boldsymbol{y}||$ the Beer-Lambert law from equation \ref{eq:beer_lambert_law} gives us the proportion of light that did not hit a particle $P(X > t) = T(t)$ \cite[p. 5]{novak_overview}.
@@ -138,13 +139,13 @@ Equation \ref{eq:in_scattered_radiance} already used the term of a \textit{phase
 Similar like a \acs{brdf} gives the amount of light scattered into a certain direction on a surface, a phase function gives this amount in a volume \cite[p. 2]{novak_overview}.
 The simplest phase function possible is an isotropic phase function in the form
 \begin{equation}
-    f_p(\omega, \omega')=\frac{1}{4\pi}.
+    f_p(\omega_o, \omega_i)=\frac{1}{4\pi}.
 \end{equation}
 As it can be seen it has a constant value for all directions $\omega$, $\omega'$ on the unit sphere \cite[p. 2]{novak_overview}.
-% TODO: Edit w_o and w_i
-\section{\citefield{sggx}{title}}
-Since we represent our \acp{lod} as volumes choosing a phase function is required to compute the scattering directions in the medium.
-We choose the SGGX phase function because it has similar scattering properties as the GGX \ac{brdf}\cite[p. 2]{sggx}.
+
+Since we want our \acp{lod} to look similar like the corresponding mesh representation an isotropic phase function is not sufficient.
+Instead we choose the \acs{sggx} phase function \cite{sggx} because it provides scattering properties that match diffuse and specular \acsp{brdf}.
+Particularly it is similar to microfacet models like the GGX \acs{brdf} \cite{ggx} which also led to the name \acf{sggx} \cite[p. 1]{sggx}.
 The idea behind the GGX \ac{brdf} and other microfacet models is that a surface can be modeled by a distribution of normals which describe the roughness of the surface at a certain point \cite[p. 3]{ggx}.
 Expanding on this idea \citeauthor{microflake} introduced the microflake framework which models the medium as two-sided specularly reflecting flakes which are distributed according to a certain \ac{ndf} \cite[pp. 4-5]{microflake}.
 \citeauthor{sggx} define the \ac{ndf} for the SGGX phase function as:
@@ -170,45 +171,37 @@ This \ac{ndf} can be seen as the extension of the GGX \acs{ndf} to the negative 
 	\caption{Visualization of anisotropic \acsp{ndf}. Note that the negative hemisphere of the SGGX \acs{ndf} is a mirroring of the positive hemisphere.}
 	\label{img:sggx_ndf}
 \end{figure}
-Based on the \acs{ndf} the authors then introduce a \ac{vndf} $D_{\omega_i}(\omega_m)$ which is used for importance sampling of the phase function, since it reduces variance as opposed to the \acs{ndf} \cite[p. 9]{vndf_importance_sampling}.
-Another important concept in the mikroflake framework is the projected area $\sigma(\omega_i)$ of the microflakes.
-This is the area of the microflakes when projected onto a plane in direction $\omega_i$ \cite[p. 3]{sggx}.
+Based on the \acs{ndf} the authors then introduce a \ac{vndf} $D_{\omega_o}(\omega_m)$ which is used for importance sampling of the phase function, since it reduces variance as opposed to the \acs{ndf} \cite[p. 9]{vndf_importance_sampling}.
+Another important concept in the mikroflake framework is the projected area $\sigma(\omega_o)$ of the microflakes.
+This is the area of the microflakes when projected onto a plane in direction $\omega_o$ \cite[p. 3]{sggx}.
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=0.3\linewidth]{img/sggx_projected_area.png}
-    \caption{Projected area $\sigma(\omega_i)$ \cite[p. 2]{sggx}.}
+    \caption{Projected area $\sigma(\omega_o)$ \cite[p. 2]{sggx}.}
     \label{fig:sggx_projected_area}
 \end{figure}
 For the SGGX phase function the projected area is defined as \cite[p. 4]{sggx}:
 \begin{equation}
     \label{eq:projected_area}
-    \sigma(\omega_i)=\int_\Omega \langle \omega_i, \omega_m \rangle D(\omega_m) d\omega_m = \sqrt{\omega_i^T S \omega_i},
+    \sigma(\omega_o)=\int_\Omega \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m = \sqrt{\omega_o^T S \omega_o},
 \end{equation}
 where $\langle -,-\rangle$ denotes the clamped dot product \cite[p. 3]{sggx}.
 Having defined these terms the authors introduce the actual phase function which consists of a specular and a diffuse component.
 The specular component is evaluated as \cite[p.7]{sggx}:
 \begin{equation}
-    f{}^{spec}_p(\omega_i \rightarrow \omega_o) = \frac{D(\omega_h)}{4 \sigma(\omega_i)}.
+    f{}^{spec}_p(\omega_o, \omega_i) = \frac{D(\omega_h)}{4 \sigma(\omega_o)}.
 \end{equation}
-Importance sampling the specular component requires to sample a normal from $D_{\omega_i}$ and the direction $\omega_i$ is reflected on this normal to generate an outgoing direction $\omega_o$ \cite[p. 8]{sggx}.
-For evaluating the diffuse phase function \citeauthor{sggx} propose to sample a normal $\omega_m$ from $D_{w_i}$ which gives an unbiased estimate of the following integral \cite[p. 8]{sggx}:
+Importance sampling the specular component requires to sample a normal from $D_{\omega_o}$ and the direction $\omega_o$ is reflected on this normal to generate an incident direction $\omega_i$ \cite[p. 8]{sggx}.
+For evaluating the diffuse phase function \citeauthor{sggx} propose to sample a normal $\omega_m$ from $D_{w_o}$ which gives an unbiased estimate of the following integral \cite[p. 8]{sggx}:
 \begin{equation}
-    f{}^{diff}_p(\omega_i \rightarrow \omega_o) = \frac{1}{\pi}\int_\Omega \langle\omega_o,\omega_m\rangle D_{\omega_i}(\omega_m) d\omega_m = \lim \limits_{N \to +\infty} \frac{1}{N} \sum_{n=1}^N \frac{1}{\pi} \langle\omega_o,\omega_m(n)\rangle.
+    f{}^{diff}_p(\omega_o, \omega_i) = \frac{1}{\pi}\int_\Omega \langle\omega_i,\omega_m\rangle D_{\omega_o}(\omega_m) d\omega_m = \lim \limits_{N \to +\infty} \frac{1}{N} \sum_{n=1}^N \frac{1}{\pi} \langle\omega_i,\omega_m(n)\rangle.
 \end{equation}
-$f{}^{diff}_p$ can then be importance sampled by generating a direction $\omega_m$ from $D_{\omega_i}$ and then sampling the hemisphere given by $\omega_m$ \cite[p. 8]{sggx}.
+$f{}^{diff}_p$ can then be importance sampled by generating a direction $\omega_m$ from $D_{\omega_o}$ and then sampling the hemisphere given by $\omega_m$ \cite[p. 8]{sggx}.
 
-\section{\citefield{hybrid_mesh_volume_lods}{title}}
-Another important paper for the thesis is \citetitle{hybrid_mesh_volume_lods} by \citeauthor{hybrid_mesh_volume_lods}.
-Their idea is to represent macroscopic surfaces (larger than the target resolution) as mesh \acsp{lod} while microscopic geometry (smaller than the target resolution) is represented in volumes \cite[p. 3]{hybrid_mesh_volume_lods}.
-This is different to our approach as we represent both cases by volumes.
-The first step in their pipeline is to seperate the macroscopic from the microscopic geometry \cite[p. 5]{hybrid_mesh_volume_lods}.
-For a tree that would mean to seperate the trunk from the branches and leafs \cite[p. 3]{hybrid_mesh_volume_lods}.
-The second step is to apply mesh simplification on the macroscopic surface while preserving the reflectance properties.
-They achieve mesh simplification by using edge collapse, therefore they remove triangle edges which are smaller than the target resolution.
-The adjacent triangles collapse as a result as well \cite[p. 6]{hybrid_mesh_volume_lods}.
-To preserve reflectance the authors update the diffuse and specular albedos of the remaining vertices by a weighted sum of the old vertices \cite[p. 6]{hybrid_mesh_volume_lods}.
-The last step in their pipeline is the voxelization of the sub-resolution geometry.
-The authors choose a ray casting approach to estimate the density for each voxel \cite[p. 8]{hybrid_mesh_volume_lods}.
+\section{Mesh filtering}
+\label{sec:mesh_filtering}
+For generating \acp{lod} we need to transform the mesh representation into volumes, we refer to this process as filtering.
+We follow the approach by \citeauthor{hybrid_mesh_volume_lods} in the paper \citetitle{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
 To sample ray origins the authors use a \ac{pdf} $D_i=D_i^{cube} \ast D^{smooth}$ around the voxel center \cite[p. 9]{hybrid_mesh_volume_lods}.
 $D_i^{cube}$ is a cubic uniform \ac{pdf} around the voxel center and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge \cite[p. 9]{hybrid_mesh_volume_lods}.
 The length of the rays is set to the length of the voxel edge \cite[p. 9]{hybrid_mesh_volume_lods}.

@@ -128,11 +128,8 @@ series = {SIGGRAPH '10}
 }
 
 @Inbook{brick_grid,
-author="Hofmann, Nikolai
-and Evans, Alex",
-editor="Marrs, Adam
-and Shirley, Peter
-and Wald, Ingo",
+author="Hofmann, Nikolai and Evans, Alex",
+editor="Marrs, Adam and Shirley, Peter and Wald, Ingo",
 title="Efficient Unbiased Volume Path Tracing on the GPU",
 bookTitle="Ray Tracing Gems II: Next Generation Real-Time Rendering with DXR, Vulkan, and OptiX",
 year="2021",
@@ -215,3 +212,203 @@ articleno = {111},
 numpages = {16},
 keywords = {free-path sampling, transmittance, participating media, volume rendering, color, delta tracking, ratio tracking}
 }
+
+@article{kajiya_rendering_fur_with_textures,
+author = {Kajiya, J. T. and Kay, T. L.},
+title = {Rendering Fur with Three Dimensional Textures},
+year = {1989},
+issue_date = {July 1989},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {23},
+number = {3},
+issn = {0097-8930},
+url = {https://doi.org/10.1145/74334.74361},
+doi = {10.1145/74334.74361},
+abstract = {We present a method for rendering scenes with fine detail via an object called a texel, a rendering primitive inspired by volume densities mixed with anisotropic lighting models. This technique solves a long outstanding problem in image synthesis: the rendering of furry surfaces.},
+journal = {SIGGRAPH Comput. Graph.},
+month = {jul},
+pages = {271–280},
+numpages = {10}
+}
+
+@article{zhao_building_volumetric_appearance_models,
+author = {Zhao, Shuang and Jakob, Wenzel and Marschner, Steve and Bala, Kavita},
+title = {Building Volumetric Appearance Models of Fabric Using Micro CT Imaging},
+year = {2011},
+issue_date = {July 2011},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {30},
+number = {4},
+issn = {0730-0301},
+url = {https://doi.org/10.1145/2010324.1964939},
+doi = {10.1145/2010324.1964939},
+abstract = {The appearance of complex, thick materials like textiles is determined by their 3D structure, and they are incompletely described by surface reflection models alone. While volume scattering can produce highly realistic images of such materials, creating the required volume density models is difficult. Procedural approaches require significant programmer effort and intuition to design specialpurpose algorithms for each material. Further, the resulting models lack the visual complexity of real materials with their naturally-arising irregularities.This paper proposes a new approach to acquiring volume models, based on density data from X-ray computed tomography (CT) scans and appearance data from photographs under uncontrolled illumination. To model a material, a CT scan is made, resulting in a scalar density volume. This 3D data is processed to extract orientation information and remove noise. The resulting density and orientation fields are used in an appearance matching procedure to define scattering properties in the volume that, when rendered, produce images with texture statistics that match the photographs. As our results show, this approach can easily produce volume appearance models with extreme detail, and at larger scales the distinctive textures and highlights of a range of very different fabrics like satin and velvet emerge automatically---all based simply on having accurate mesoscale geometry.},
+journal = {ACM Trans. Graph.},
+month = {jul},
+articleno = {44},
+numpages = {10},
+keywords = {cloth, appearance modeling, volume rendering}
+}
+
+@article{meng_multi_scale_modeling_and_rendering_of_granular_materials,
+    author = "Meng, Johannes and Papas, Marios and Habel, Ralf and Dachsbacher, Carsten and Marschner, Steve and Gross, Markus and Jarosz, Wojciech",
+    title = "Multi-Scale Modeling and Rendering of Granular Materials",
+    journal = "ACM Transactions on Graphics (Proceedings of SIGGRAPH)",
+    volume = "34",
+    number = "4",
+    year = "2015",
+    month = jul,
+    doi = "10/gfzndr",
+    keywords = "physically based rendering, granular media, discrete random media",
+    abstract = "We address the problem of modeling and rendering granular materials—such as large structures made of sand, snow, or sugar—where an aggregate object is composed of many randomly oriented, but discernible grains. These materials pose a particular challenge as the complex scattering properties of individual grains, and their packing arrangement, can have a dramatic effect on the large-scale appearance of the aggregate object. We propose a multi-scale modeling and rendering framework that adapts to the structure of scattered light at different scales. We rely on path tracing the individual grains only at the finest scale, and—by decoupling individual grains from their arrangement—we develop a modular approach for simulating longer-scale light transport. We model light interactions within and across grains as separate processes and leverage this decomposition to derive parameters for classical radiative transport, including standard volumetric path tracing and a diffusion method that can quickly summarize the large scale transport due to many grain interactions. We require only a one-time precomputation per exemplar grain, which we can then reuse for arbitrary aggregate shapes and a continuum of different packing rates and scales of grains. We demonstrate our method on scenes containing mixtures of tens of millions of individual, complex, specular grains that would be otherwise infeasible to render with standard techniques."
+}
+
+@inproceedings{hoppe_simplification,
+author = {Hoppe, Hugues},
+title = {Progressive Meshes},
+year = {1996},
+isbn = {0897917464},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/237170.237216},
+doi = {10.1145/237170.237216},
+booktitle = {Proceedings of the 23rd Annual Conference on Computer Graphics and Interactive Techniques},
+pages = {99–108},
+numpages = {10},
+keywords = {mesh simplification, level of detail, progressive transmission, geometry compression, shape interpolation},
+series = {SIGGRAPH '96}
+}
+
+INPROCEEDINGS{garland_heckbert_simplification,
+author={Garland, M. and Heckbert, P.S.},
+booktitle={Proceedings Visualization '98 (Cat. No.98CB36276)},
+title={Simplifying surfaces with color and texture using quadric error metrics},
+year={1998},
+volume={},
+number={},
+pages={263-269},
+doi={10.1109/VISUAL.1998.745312}
+}
+
+@article{CATMULL1978350,
+title = {Recursively generated B-spline surfaces on arbitrary topological meshes},
+journal = {Computer-Aided Design},
+volume = {10},
+number = {6},
+pages = {350-355},
+year = {1978},
+issn = {0010-4485},
+doi = {https://doi.org/10.1016/0010-4485(78)90110-0},
+url = {https://www.sciencedirect.com/science/article/pii/0010448578901100},
+author = {E. Catmull and J. Clark},
+abstract = {This paper describes a method for recursively generating surfaces that approximate points lying-on a mesh of arbitrary topology. The method is presented as a generalization of a recursive bicubic B-spline patch subdivision algorithm. For rectangular control-point meshes, the method generates a standard B-spline surface. For non-rectangular meshes, it generates surfaces that are shown to reduce to a standard B-spline surface except at a small number of points, called extraordinary points. Therefore, everywhere except at these points the surface is continuous in tangent and curvature. At the extraordinary points, the pictures of the surface indicate that the surface is at least continuous in tangent, but no proof of continuity is given. A similar algorithm for biquadratic B-splines is also presented.}
+}
+
+@online{catmull_clark_step_3,
+ author = {UserTwoSix},
+  url = {https://renderman.pixar.com/news/renderman-xpu-development-update},
+ urldate = {2022-05-13},
+ year = {2021}
+}
+
+@mastersthesis{loop_subdivision,
+  author  = "Charles Loop",
+  title   = "Smooth subdivision surfaces based on triangles",
+  school  = "University of Utah",
+  year    = 1987,
+  month   = "August",
+  url     = {https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/thesis-10.pdf}
+}
+
+@inproceedings{moreton_tessellation,
+author = {Moreton, Henry},
+title = {Watertight Tessellation Using Forward Differencing},
+year = {2001},
+isbn = {158113407X},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/383507.383520},
+doi = {10.1145/383507.383520},
+abstract = {In this paper we describe an algorithm and hardware for the tessellation of polynomial surfaces. While conventional forward difference-based tessellation is subject to round off error and cracking, our algorithm produces a bit-for-bit consistent triangle mesh across multiple independently tessellated patches. We present tessellation patterns that exploit the efficiency of iterative evaluation techniques while delivering a defect free adaptive tessellation with continuous level-of-detail. We also report the rendering performance of the resulting physical hardware implementation.},
+booktitle = {Proceedings of the ACM SIGGRAPH/EUROGRAPHICS Workshop on Graphics Hardware},
+pages = {25–32},
+numpages = {8},
+keywords = {curves & surfaces, rendering hardware, graphics hardware, geometric modeling, CAD, hardware systems},
+location = {Los Angeles, California, USA},
+series = {HWWS '01}
+}
+
+@article{niessner_tessellation,
+	title={Real-time Rendering Techniques with Hardware Tessellation},
+	author={Nie{\ss}ner, Matthias and Keinert, Benjamin and Fisher, Matthew and Stamminger, Marc and Loop, Charles and Sch{\"a}fer, Henry},
+	journal = {Computer Graphics Forum},
+	publisher = {EG},
+	volume = {},
+	number = {},
+	year = {2015},
+  url = {http://www.niessnerlab.org/papers/2015/6survey/niessner2015survey.pdf}
+}
+
+@article{peng_simplification,
+author = {Peng, Chao and Cao, Yong},
+title = {A GPU-based Approach for Massive Model Rendering with Frame-to-Frame Coherence},
+journal = {Computer Graphics Forum},
+volume = {31},
+number = {2pt2},
+pages = {393-402},
+keywords = {I.3.3 Computer Graphics: Picture/Image Generation—Viewing algorithms, I.3.5 Computer Graphics: Computational Geometry and Object Modeling—Geometric algorithms},
+doi = {https://doi.org/10.1111/j.1467-8659.2012.03018.x},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2012.03018.x},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-8659.2012.03018.x},
+abstract = {Abstract Rendering massive 3D models in real-time has long been recognized as a very challenging problem because of the limited computational power and memory space available in a workstation. Most existing rendering techniques, especially level of detail (LOD) processing, have suffered from their sequential execution natures. We present a GPU-based approach which enables interactive rendering of large 3D models with hundreds of millions of triangles. Our work contributes to the massive rendering research in two ways. First, we present a simple and efficient mesh simplification algorithm towards GPU architecture. Second, we propose a novel GPU out-of-core approach that adopts a frame-to-frame coherence scheme in order to minimize the high communication cost between CPU and GPU. Our results show that the parallel algorithm of mesh simplification and the GPU out-of-core approach significantly improve the overall rendering performance.},
+year = {2012}
+}
+
+@article{niessner_subdivision,
+  title={Feature-adaptive GPU rendering of Catmull-Clark subdivision surfaces},
+  author={Nie{\ss}ner, Matthias and Loop, Charles and Meyer, Mark and Derose, Tony},
+  journal={ACM Transactions on Graphics (TOG)},
+  volume={31},
+  number={1},
+  pages={1--11},
+  year={2012},
+  publisher={ACM New York, NY, USA}
+}
+
+@article{afra_voxel_lods,
+author = {Áfra, Attila T.},
+title = {Interactive Ray Tracing of Large Models Using Voxel Hierarchies},
+journal = {Computer Graphics Forum},
+volume = {31},
+number = {1},
+pages = {75-88},
+keywords = {ray tracing, massive models, real-time rendering, out-of-core, level-of-detail, voxels,  I.3.7 Computer Graphics: Three-Dimensional Graphics and Realism—Raytracing, I.3.6 Computer Graphics Methodology and Techniques—Graphics data structures and data types},
+doi = {https://doi.org/10.1111/j.1467-8659.2011.02085.x},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2011.02085.x},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-8659.2011.02085.x},
+abstract = {Abstract We propose an efficient approach for interactive visualization of massive models with CPU ray tracing. A voxel-based hierarchical level-of-detail (LOD) framework is employed to minimize rendering time and required system memory. In a pre-processing phase, a compressed out-of-core data structure is constructed, which contains the original primitives of the model and the LOD voxels, organized into a kd-tree. During rendering, data is loaded asynchronously to ensure a smooth inspection of the model regardless of the available I/O bandwidth. With our technique, we are able to explore data sets consisting of hundreds of millions of triangles in real-time on a desktop PC with a quad-core CPU.},
+year = {2012}
+}
+
+@article{yue_space_partitioning,
+author = {Yue, Yonghao and Iwasaki, Kei and Chen, Bing-Yu and Dobashi, Yoshinori and Nishita, Tomoyuki},
+title = {Toward Optimal Space Partitioning for Unbiased, Adaptive Free Path Sampling of Inhomogeneous Participating Media},
+journal = {Computer Graphics Forum},
+volume = {30},
+number = {7},
+pages = {1911-1919},
+keywords = {I.3.7 Computer Graphics: Three-Dimensional Graphics and Realism, I.3.3 Computer Graphics: Picture/Image Generation, G.3 Probability and Statistics: Probabilistic Algorithms},
+doi = {https://doi.org/10.1111/j.1467-8659.2011.02049.x},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2011.02049.x},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-8659.2011.02049.x},
+abstract = {Abstract Photo-realistic rendering of inhomogeneous participating media with light scattering in consideration is important in computer graphics, and is typically computed using Monte Carlo based methods. The key technique in such methods is the free path sampling, which is used for determining the distance (free path) between successive scattering events. Recently, it has been shown that efficient and unbiased free path sampling methods can be constructed based on Woodcock tracking. The key concept for improving the efficiency is to utilize space partitioning (e.g., kd-tree or uniform grid), and a better space partitioning scheme is important for better sampling efficiency. Thus, an estimation framework for investigating the gain in sampling efficiency is important for determining how to partition the space. However, currently, there is no estimation framework that works in 3D space. In this paper, we propose a new estimation framework to overcome this problem. Using our framework, we can analytically estimate the sampling efficiency for any typical partitioned space. Conversely, we can also use this estimation framework for determining the optimal space partitioning. As an application, we show that new space partitioning schemes can be constructed using our estimation framework. Moreover, we show that the differences in the performances using different schemes can be predicted fairly well using our estimation framework.},
+year = {2011}
+}
+
+
+
+
+
+
