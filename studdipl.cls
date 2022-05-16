@@ -134,32 +134,32 @@ Datenverarbeitung, Informatik 9}
 {\LARGE\bf\@title}
 \vspace{1.50cm}
 
-{\large \@thesistype\ im Fach Informatik}
+{\large \@thesistype\ in Computer Science}
 \vspace{1.50cm}
 
-{\small vorgelegt von}\bigskip
+{\small submitted by}\bigskip
 
 {\bf\@author}\bigskip
 
-geb.\ am \@birthday\ in \@birthplace\bigskip
+born on \@birthday\ in \@birthplace\bigskip
 \vspace{1.5cm}
 
-{\small angefertigt am}\bigskip
+{\small written at}\bigskip
 
-{\bf Department Informatik\\
-Lehrstuhl Graphische Datenverarbeitung\\
-Friedrich-Alexander-Universit\"at Erlangen-N\"urnberg}
+{\bf Department of Computer Science\\
+Chair for Computer Science 9 (Computer Graphics)\\
+Friedrich-Alexander-University Erlangen-Nuremberg}
 \vfill
 
-Betreuer: \@supervisor\\
+Advisor: \@supervisor\\
 \bigskip
-Betreuender Hochschullehrer: Prof. Dr. Marc Stamminger
+Supervisor: Prof. Dr. Marc Stamminger
 \vfill
 \vfill
 
-Beginn der Arbeit:\ \@bdate\bigskip
+Start of thesis:\ \@bdate\bigskip
 
-Abgabe der Arbeit:\ \@edate
+End of thesis:\ \@edate
 \vfill
 
 \end{center}

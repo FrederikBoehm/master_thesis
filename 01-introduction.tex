@@ -3,17 +3,17 @@
 
 \section{Motivation}
 \label{sect:motivation}
-In recent years computer hardware became increasingly powerful, allowing now even real time raytracing with the introduction of the RTX technology by NVIDIA in 2018 \cite[pp. 31 - 38]{turing_whitepaper}.
+In recent years computer hardware became increasingly powerful, allowing now even real time raytracing with the introduction of the RTX technology by NVIDIA in 2018 \cite{turing_whitepaper}.
 In parallel to the advances in computer hardware the scenes to be rendered also became more and more complex reaching more than 70 GB for a single shot in the film Coco \cite{pixarxpu}.
 While high detailed geometry and textures are required for close-up shots they impair performance when rendering them at large distances like in a landscape scene.
 This is because rays have to be intersected with all triangles in an AABB regardless of the distance to the camera.
-Additionally having high detailed geometry and textures at distance is prone to aliasing due to undersampling \cite[pp. 409-410]{pbr}.
-According to the Nyquist-Shannon sampling theorem we can avoid this aliasing as long as our sampling frequency is twice as high as the maximum frequency in the signal \cite[p. 11]{shannonsampling}.
+Additionally having high detailed geometry and textures at distance is prone to aliasing due to undersampling \cite{pbr}.
+According to the Nyquist-Shannon sampling theorem we can avoid this aliasing as long as our sampling frequency is twice as high as the maximum frequency in the signal \cite{shannonsampling}.
 Therefore we could increase the number of rays that are traced per pixel.
 However this would lead to even worse performance.
 The other option is to reduce the frequency of the signal.
-For geometry this is typically accomplished by simplifying a detailed mesh in a preprocess to rendering \cite[pp. 706 - 712]{realtime} or by generating new triangles on the fly using tessellation \cite[pp. 767 - 781]{realtime}.
-The usual approach to reduce the frequency in textures is to use mipmapping \cite[pp. 265 - 267]{fundamentals}.
+For geometry this is typically accomplished by simplifying a detailed mesh in a preprocess to rendering \cite{realtime} or by generating new triangles on the fly using tessellation \cite{realtime}.
+The usual approach to reduce the frequency in textures is to use mipmapping \cite{fundamentals}.
 In this thesis we explore another approach for level of detail rendering by representing geometry and color by volumes.
 
 \section{Related Work}
@@ -21,37 +21,34 @@ In this thesis we explore another approach for level of detail rendering by repr
 Representing surfaces by volumes is a long standing problem in computer graphics.
 % The first work that suggested the use of volumes beyond the rendering of dust or smoke
 An early work by \citeauthor{kajiya_rendering_fur_with_textures} uses three dimensional textures of density values to render fur \cite{kajiya_rendering_fur_with_textures}.
-The authors store the density $\rho$, a coordinate frame as well as parameters for diffuse and specular reflection functions in each texel \cite[p. 2-3]{kajiya_rendering_fur_with_textures}.
+The authors store the density $\rho$, a coordinate frame as well as parameters for diffuse and specular reflection functions in each texel \cite{kajiya_rendering_fur_with_textures}.
 % The diffuse lighting component is transformed from the traditional lambertian reflectance model by integrating over the half cylindrical shape of a hair that faces the light source \cite[p. 5-6]{kajiya_rendering_fur_with_textures}.
 % For specular reflection the authors
 
-In the paper \citetitle{meng_multi_scale_modeling_and_rendering_of_granular_materials} \citeauthor{meng_multi_scale_modeling_and_rendering_of_granular_materials} use volumetric representations of grains for efficient path tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-For light scattering in the volume the authors use a tabulated phase function measured from simulating the light scattering of a single grain using ray-tracing \cite[p. 6]{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-The extinction coefficient is computed from the simulation results as well since the authors also track the mean free-flight distance between successive interactions with grain \cite[p. 7]{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-\citeauthor{meng_multi_scale_modeling_and_rendering_of_granular_materials} observe a speedup of 2.1-30$\times$ compared to the surface representation \cite[p. 9]{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-This is because next event estimation is not possible for grain that does not lie on the surface \cite[p. 9]{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+In a paper by \citeauthor{meng_multi_scale_modeling_and_rendering_of_granular_materials} volumetric representations of grains is used for efficient path tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+For light scattering in the volume the authors use a tabulated phase function measured from simulating the light scattering of a single grain using ray-tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+The extinction coefficient is computed from the simulation results as well since the authors also track the mean free-flight distance between successive interactions with grain \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+The authors observe a speedup of 2.1-30$\times$ compared to the surface representation \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+This is because next event estimation is not possible for grain that does not lie on the surface \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 
-Many recent contributions use the microflake model introduced by \citeauthor{microflake}, which models a volume by two-sided, randomly oriented flakes \cite[p. 4-5]{microflake}.
+Many recent contributions use the microflake model introduced by \citeauthor{microflake}, which models a volume by two-sided, randomly oriented flakes \cite{microflake}.
 \citeauthor{zhao_building_volumetric_appearance_models} use this model to render fabric \cite{zhao_building_volumetric_appearance_models}.
-The authors work with real fabric and scan it using computer tomography to obtain the density values for each voxel \cite[p. 4]{zhao_building_volumetric_appearance_models}.
-To compute the orientation of the microflakes in each voxel, the authors fit cylinders to the scanned density field \cite[p. 4]{zhao_building_volumetric_appearance_models}.
-For estimating the color and reflection properties \citeauthor{zhao_building_volumetric_appearance_models} repeatedly render the volume and adjust the properties until the image matches a photograph of the fabric \cite[p. 5]{zhao_building_volumetric_appearance_models}.
+The authors work with real fabric and scan it using computer tomography to obtain the density values for each voxel \cite{zhao_building_volumetric_appearance_models}.
+To compute the orientation of the microflakes in each voxel, the authors fit cylinders to the scanned density field \cite{zhao_building_volumetric_appearance_models}.
+For estimating the color and reflection properties the authors repeatedly render the volume and adjust the properties until the image matches a photograph of the fabric \cite[p. 5]{zhao_building_volumetric_appearance_models}.
 
-\citetitle{sggx} by \citeauthor{sggx} is another paper that uses the microflake framework \cite{sggx}.
-The authors develop a new phase function which resembles the reflection properties of the GGX \ac{brdf} in volumes \cite[p. 1]{sggx}.
-It can be used to substitute existing fiber-like scattering function as well as surface-like scattering functions \cite[p. 4-5]{sggx}.
+\citeauthor{sggx} contributed another paper that uses the microflake framework \cite{sggx}.
+The authors develop a new phase function which resembles the reflection properties of the GGX \ac{brdf} in volumes \cite{sggx}.
+It can be used to substitute existing fiber-like scattering function as well as surface-like scattering functions \cite{sggx}.
 This property makes it interesting for our thesis, since we want to represent surface meshes by volumes.
 We therefore explain the theoretical background extensively in section \ref{subsec:phase_function}.
 
-
-
-
-\subsection{Efficient volume rendering}
+\subsection{Efficient Volume Rendering}
 Although this thesis does not provide contributions to the optimization of volume rendering itself, using these optimizations is key for competing with hardware accelerated ray tracing.
 
 In order to obtain local density majorants for delta tracking, \citeauthor{yue_space_partitioning} compares different space partitioning techniques regarding their performance implications \cite{yue_space_partitioning}.
 These encompass a uniform grid partitioning, kd-trees and octrees \citeauthor{yue_space_partitioning}.
-The authors evaluate their schemes on $8\times8\times8$ density grids and observe the highest speed-up compared to a global density majorant for the kd-tree with up to $50\times$ \cite{yue_space_partitioning}.
+The author evaluates their schemes on $8\times8\times8$ density grids and observe the highest speed-up compared to a global density majorant for the kd-tree with up to $50\times$ \cite{yue_space_partitioning}.
 A drawback is the high construction time of more than $1.5s$ which is two orders of magnitudes slower than the octree and three orders of magnitues slower than the uniform partitioning \cite{yue_space_partitioning}.
 
 \citeauthor{brick_grid} use local density majorants for their distance sampling and transmittance estimation \cite{brick_grid}.
@@ -60,19 +57,19 @@ The whole approach of \citeauthor{brick_grid} is optimized for the usage on a \a
 We go into further detail on this paper in section \ref{subsec:solving_beer_lambert_law_in_heterogeneous_media}.
 
 % \subsection{Mesh voxelization}
-\subsection{\acl{lod} Approaches}
+\subsection{Level of Detail Approaches}
 There are numerous strategies for generating lods which can be classified in \textit{simplification}, \textit{subdivision}, \textit{tessellation} and \textit{voxel based}.
 
 % \noindent\textbf{Simplification}\linebreak
 \subsubsection*{Simplification}
-Mesh simplification techniques have in common that they remove geometry from an existing high detailed mesh while trying to preserve the visual appearcance \cite[p. 706]{realtime}.
-\citeauthor{hoppe_simplification} follow this approach in the paper \citetitle{hoppe_simplification} \cite{hoppe_simplification}.
-They formulate the problem as the minimization of an energy function $E = E_{dist} + E_{rep} + E_{spring}$, where $E_{dist}$ measures the total squared distance of the mesh's points and $E_{rep}$ penalizes the number of vertices.
+Mesh simplification techniques have in common that they remove geometry from an existing high detailed mesh while trying to preserve the visual appearcance \cite{realtime}.
+This approach is followed in a paper by \citeauthor{hoppe_simplification} \cite{hoppe_simplification}.
+They formulate the problem as the minimization of an energy function $E = E_{dist} + E_{rep} + E_{spring}$, where $E_{dist}$ measures the total squared distance of the mesh's points and $E_{rep}$ penalizes the number of vertices \cite{hoppe_simplification}.
 $E_{spring}$ is a regularization term, which acts as if the edges between vertices were replaced by springs \cite{hoppe_simplification}.
-Their algorithm randomly attempts to remove edges from the mesh and marks the change as preliminary if $E_{new} < E_{old}$.
+Their algorithm randomly attempts to remove edges from the mesh and marks the change as preliminary if $E_{new} < E_{old}$ \cite{hoppe_simplification}.
 In a second step one of the vertices in the neighborhood to this preliminary change is moved in order to minimize $E_{dist}$ and $E_{spring}$ while omitting self-intersections of the mesh \cite{hoppe_simplification}.
 
-The authors of \citetitle{peng_simplification} use edge collapse in a \ac{lod} context \cite{peng_simplification}.
+\citeauthor{peng_simplification} use edge collapse in a \ac{lod} context \cite{peng_simplification}.
 They first apply a pre-processing step which determines the order of the edge collapse \cite{peng_simplification}.
 Based on this order, the vertices are restructured, starting from vertices that exist in all \acp{lod} to vertices that only exist in detailed \acp{lod} \cite{peng_simplification}.
 This allows to only load the vertices to the GPU that are required for the current \ac{lod} \cite{peng_simplification}.
@@ -83,7 +80,7 @@ The \ac{gpu} then applies the actual edge collapsing using one thread per triang
 \subsubsection*{Subdivision}
 Subdivision algorithms can also be seen as an instance of \ac{lod} approaches, since they start with a coarse mesh and iteratively produce smoother meshes.
 
-The paper \citetitle{CATMULL1978350} introduced an algorithm that is now widely known as Catmull-Clark subdivision \cite{CATMULL1978350}.
+\citeauthor{CATMULL1978350} introduced an algorithm that is now widely known as Catmull-Clark subdivision \cite{CATMULL1978350}.
 The algorithm is not limited to triangle meshes but can be used with arbitrary polygons.
 In the first step a new \textit{face point} is computed by calculating the average position of the vertices defining the face \cite{CATMULL1978350}.
 Secondly, for every edge the authors compute the average position of the midpoint of this edge with the two adjacent points generated in step one, this gives new \textit{edge points} \cite{CATMULL1978350}.
@@ -129,7 +126,7 @@ Tessellation is similar to subdivision as it also increases the number of triang
 It typically refers to hardware tessellation which is a part of the rendering pipeline of modern \acp{gpu}.
 
 
-The early work \citetitle{moreton_tessellation} by \citeauthor{moreton_tessellation} compares the De Casteljau and the forward differencing algorithm for evaluating tensor product surfaces \cite{moreton_tessellation}.
+An early work by \citeauthor{moreton_tessellation} compares the De Casteljau and the forward differencing algorithm for evaluating tensor product surfaces \cite{moreton_tessellation}.
 These parametric surfaces are the basis for hardware tessellation.
 The authors find that the De Casteljau algorithm produces more stable and precise results and supports evaluation at arbitrary parameter values.
 Forward differencing uses only additions and has a complexity of $O(n)$ compared to a complexity of $O(n^2)$ for the De Casteljau algorithm.
