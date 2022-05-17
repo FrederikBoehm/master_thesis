@@ -42,6 +42,7 @@ For volumes, the radiance along a ray is determined by the in- and out-scatterin
 \end{figure}
 These effects are quantified by the \textit{scattering coefficient} $\mu_s$ and the \textit{absorption coefficient} $\mu_a$ \cite{novak_overview}.
 The sum of $\mu_s$ and $\mu_a$ is called the \textit{extinction coefficient} $\mu_t=\mu_a + \mu_s$ and accounts for either of the effects \cite{novak_overview}.
+We can further define the fraction of photons that scatter as the \textit{albedo} $\alpha=\frac{\mu_s}{\mu_t}$ \cite{novak_overview}.
 With the integral form of the \textit{radiative transfer equation} we have a way to formalize the scattering, emission and absoption of the medium \cite{novak_overview}:
 \begin{equation}
     \label{eq:radiative_transfer}
@@ -214,25 +215,29 @@ For evaluating the diffuse phase function the authors propose to sample a normal
 \end{equation}
 $f{}^{diff}_p$ can then be importance sampled by generating a direction $\omega_m$ from $D_{\omega_o}$ and then sampling the hemisphere given by $\omega_m$ \cite{sggx}.
 
-\section{Mesh Filtering}
-\label{sec:mesh_filtering}
+\section{Transforming Meshes into Volumes}
+\label{sec:transforming_meshes_into_volumes}
 For generating \acp{lod} we need to transform the mesh representation into volumes, we refer to this process as filtering.
-We follow the approach by \citeauthor{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
+% We follow the approach by \citeauthor{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
+We follow a similar approach as \citeauthor{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
+Our deviations from their approach are discussed in Section \ref{sec:mesh_filtering}.
 To sample ray origins the authors use a \ac{pdf} $D_i=D_i^{cube} \ast D^{smooth}$ around the voxel center \cite{hybrid_mesh_volume_lods}.
 $D_i^{cube}$ is a cubic uniform \ac{pdf} around the voxel center and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
 The length of the rays is set to the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
-We deviate from this ray generation procedure as we choose the ray origin on a cubic uniform \ac{pdf} around the voxel center and clip our rays at a bounding sphere around the voxel.
-Details to our procedure are explained in section \dots.
 Each ray is intersected with the micro-geometry, the number of hits and the total number of rays casted determine the occlusion probability \cite{hybrid_mesh_volume_lods}:
 \begin{equation}
     P_{occ}=\frac{nbHits}{nbRays}.
 \end{equation}
 Since a medium is defined on the density $\rho$ the authors solve the integral
 \begin{equation}
-    1 - \frac{1}{4\pi}\int_\Omega e^{-\rho\sigma_u(\omega)ray_l} d\omega = P_{occ}
+    1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho\sigma(\omega)ray_l} d\omega = P_{occ}
+    \label{eq:loubet_filtering_equation}
 \end{equation}
 for $\rho$ \cite{hybrid_mesh_volume_lods}.
 $\sigma_u(\omega)$ is the microflake projected area as defined in \ref{eq:projected_area} and $ray_l$ is again the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
-This equation cannot be solved analytically and therefore requires gradient descent based optimization of $\rho$ \cite{hybrid_mesh_volume_lods}.
+This equation cannot be solved analytically for the density and therefore requires gradient descent based optimization \cite{hybrid_mesh_volume_lods}.
+
+
+
 
 

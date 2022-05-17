@@ -55,6 +55,23 @@ maxcitenames=1
 
 \usepackage{acronym}
 \usepackage{multicol}
+\usepackage{svg}
+
+\makeatletter
+\def\thickhline{%
+  \noalign{\ifnum0=`}\fi\hrule \@height \thickarrayrulewidth \futurelet
+   \reserved@a\@xthickhline}
+\def\@xthickhline{\ifx\reserved@a\thickhline
+               \vskip\doublerulesep
+               \vskip-\thickarrayrulewidth
+             \fi
+      \ifnum0=`{\fi}}
+\makeatother
+
+\newlength{\thickarrayrulewidth}
+\setlength{\thickarrayrulewidth}{2\arrayrulewidth}
+
+\DeclareUnicodeCharacter{02B9}{'}
 
 % danke, daniel:
 \lstdefinelanguage{CUDA}{morekeywords={
@@ -209,6 +226,8 @@ maxcitenames=1
 \input{01-introduction.tex} 
 
 \input{02-fundamentals.tex} 
+
+\input{03-method.tex}
 
 % ---------- Anhang ----------
 

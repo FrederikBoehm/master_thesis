@@ -1,3 +1,3 @@
-pdflatex Arbeit.tex
+pdflatex --shell-escape Arbeit.tex
 biber Arbeit
-pdflatex Arbeit.tex
+pdflatex --shell-escape Arbeit.tex
