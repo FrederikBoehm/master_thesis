@@ -19,7 +19,12 @@ The recursive nature of this equation can be observed immediately as we could su
 However implementing it this way is infeasible since that would lead to an exponential growth in the compute time and memory consumption with the recursion depth.
 As a solution to this problem \citeauthor{rendering_equation} proposed the \textit{path tracing} algorithm \cite{rendering_equation}.
 Instead of sampling $N$ new directions at each point of intersecting the geometry, we sample a single direction at each intersection point starting at the camera until we hit a light source \cite{rendering_equation}.
-When we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
+Conceptually the recursive approach spans up a ray tree, where the root represents the camera, a new level is added at each point of reflection and the leafs are light hits \cite{rendering_equation}.
+Path tracing then only samples one path from the root to a light source in this tree \cite{rendering_equation}.
+Of course sampling only one path leads to a high variance, but when we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
+Additionally there are methods to reduce the variance of a path like importance sampling or next event estimation.
+In short, importance sampling reduces variance by sampling from a distribution that has a similar shape like the integrand of Equation \ref{eq:render_equation} while next event estimation computes the direct illumination from a light source at each path vertex \cite{pbr}.
+\citeauthor{pbr} provide detailed explanations of these techniques \cite{pbr}.
 
 \section{Volumetric Path Tracing}
 Since we want to represent our \acsp{lod} by volumes, the following chapter introduces how path tracing can be extended to volumes.
@@ -32,6 +37,9 @@ Therefore we would like to only store relevant values, which is called a \textit
 \citeauthor{museth_vdb} use this approach in the OpenVDB library and store the grid in a B+tree \cite{museth_vdb}.
 For fast traversal, leaf and internal nodes still use dense arrays but the root node is represented by a hash table to allow for a dynamic number of voxels \cite{museth_vdb}.
 Compared to the dense grid, the background value is just stored once in the root node \cite{museth_vdb}.
+A \ac{gpu} compatible portation of OpenVDB is NanoVDB \cite{museth_nanovdb}.
+It removes third-party dependencies that OpenVDB has and is designed as a header-only library \cite{museth_nanovdb}.
+In memory the hierarchical tree is represented continuously without any pointers, which allows for fast copying between \ac{cpu} and \ac{gpu} \cite{museth_nanovdb}.
 
 \subsection{Theory of Light Propagation in Participating Media}
 \label{subsec:theory_of_light_propagation_in_participating_media}
@@ -76,7 +84,7 @@ We therefore clip the upper integration bound of equation \ref{eq:radiative_tran
     L(\boldsymbol{x}, \omega_o) = \int_0^z T(\boldsymbol{x}, \boldsymbol{y})[\mu_a(\boldsymbol{y})L_e(\boldsymbol{y}, \omega_o) + \mu_s(\boldsymbol{y})L_s(\boldsymbol{y}, \omega_o)]dy + T(\boldsymbol{x}, \boldsymbol{z})L(\boldsymbol{z}, \omega_o).
 \end{equation*}
 The idea of this \textit{volume rendering equation} is that a ray passing through a medium will hit a surface at distance $z$ \cite{novak_overview}.
-Therefore the radiance $L$ emitted and reflected from this surface is attenuated by the volume transmittance $T$ \cite{pbr}.
+The first part on the right side of this equation accounts for the in-scattering and emission of the medium while the second part represents absorbed or out-scattered radiance from the surface at distance $z$ \cite{novak_overview}.
 
 \subsection{Solving the Beer-Lambert Law in Heterogeneous Media}
 \label{subsec:solving_beer_lambert_law_in_heterogeneous_media}

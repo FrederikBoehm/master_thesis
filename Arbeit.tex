@@ -58,6 +58,10 @@ maxcitenames=1
 \usepackage{svg}
 \usepackage{tabularx}
 \usepackage{adjustbox}
+\usepackage{mathtools}
+\usepackage{xspace}
+
+\newcommand{\FLIP}{\protect\reflectbox{F}LIP\xspace}
 
 \makeatletter
 \def\thickhline{%
@@ -215,6 +219,7 @@ maxcitenames=1
 \tableofcontents
 
 \input{Abbreviations.tex}
+\input{Abstract.tex}
 \input{Notations.tex}
 
 % eine Leerseite
@@ -231,6 +236,12 @@ maxcitenames=1
 \input{02-fundamentals.tex} 
 
 \input{03-method.tex}
+
+\input{04-results_discussion.tex}
+
+\input{05-future_work.tex}
+
+\input{06-summary.tex}
 
 % ---------- Anhang ----------
 

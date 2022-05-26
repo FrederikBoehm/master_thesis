@@ -546,11 +546,87 @@ abstract = {A new ray model is presented for the reflection of electromagnetic r
   year={1983}
 }
 
+@article{flip,
+  author    = {Pontus Andersson and
+               Jim Nilsson and
+               Tomas Akenine{-}M{\"{o}}ller and
+               Magnus Oskarsson and
+               Kalle {\AA}str{\"{o}}m and
+               Mark D. Fairchild},
+  title     = "{{\FLIP:} {A} Difference Evaluator for Alternating Images}",
+  journal   = {Proceedings of the ACM on Computer Graphics and Interactive Techniques},
+  volume    = {3},
+  number    = {2},
+  pages     = {15:1--15:23},
+  year      = {2020},
+  doi={10.1145/3406183}
+}
 
+@ARTICLE{scipy,
+  author  = {Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E. and
+            Haberland, Matt and Reddy, Tyler and Cournapeau, David and
+            Burovski, Evgeni and Peterson, Pearu and Weckesser, Warren and
+            Bright, Jonathan and {van der Walt}, St{\'e}fan J. and
+            Brett, Matthew and Wilson, Joshua and Millman, K. Jarrod and
+            Mayorov, Nikolay and Nelson, Andrew R. J. and Jones, Eric and
+            Kern, Robert and Larson, Eric and Carey, C J and
+            Polat, {\.I}lhan and Feng, Yu and Moore, Eric W. and
+            {VanderPlas}, Jake and Laxalde, Denis and Perktold, Josef and
+            Cimrman, Robert and Henriksen, Ian and Quintero, E. A. and
+            Harris, Charles R. and Archibald, Anne M. and
+            Ribeiro, Ant{\^o}nio H. and Pedregosa, Fabian and
+            {van Mulbregt}, Paul and {SciPy 1.0 Contributors}},
+  title   = {{{SciPy} 1.0: Fundamental Algorithms for Scientific
+            Computing in Python}},
+  journal = {Nature Methods},
+  year    = {2020},
+  volume  = {17},
+  pages   = {261--272},
+  adsurl  = {https://rdcu.be/b08Wh},
+  doi     = {10.1038/s41592-019-0686-2},
+}
 
+@online{nanovdb,
+ author = {Wil Braithwaite and Ken Museth},
+ title = {Accelerating OpenVDB on GPUs with NanoVDB},
+  url = {https://developer.nvidia.com/blog/accelerating-openvdb-on-gpus-with-nanovdb/},
+ urldate = {2022-05-21},
+ year = {2020}
+}
 
+@online{open_to_nanovdb,
+ author = {Ken Museth and Dan Bailey},
+ title = {OpenToNanoVDB.h},
+  url = {https://github.com/AcademySoftwareFoundation/openvdb/blob/0ed0f19ea4fbb0d8bf64d3dca07abab3c7429803/nanovdb/nanovdb/util/OpenToNanoVDB.h#L655},
+ urldate = {2022-05-21},
+ year = {2020}
+}
 
+@article{vicini2021non,
+  title={A non-exponential transmittance model for volumetric scene representations},
+  author={Vicini, Delio and Jakob, Wenzel and Kaplanyan, Anton},
+  journal={ACM Transactions on Graphics (TOG)},
+  volume={40},
+  number={4},
+  pages={1--16},
+  year={2021},
+  publisher={ACM New York, NY, USA}
+}
 
-
-
-
+@inproceedings{museth_nanovdb,
+author = {Museth, Ken},
+title = {NanoVDB: A GPU-Friendly and Portable VDB Data Structure For Real-Time Rendering And Simulation},
+year = {2021},
+isbn = {9781450383738},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3450623.3464653},
+doi = {10.1145/3450623.3464653},
+abstract = { We introduce a sparse volumetric data structure, dubbed NanoVDB, which is portable to both C++11 and C99 as well as most graphics APIs, e.g. CUDA, OpenCL, OpenGL, WebGL, DirectX 12, OptiX, HLSL, and GLSL. As indicated by its name, NanoVDB is a mini-version of the much bigger OpenVDB library, both in terms of functionality and scope. However, NanoVDB offers one major advantage over OpenVDB, namely support for GPUs. As such it is applicable to both CPU and GPU accelerated simulation and rendering of high-resolution sparse volumes. In fact, it has already been adopted for real-time applications by several commercial renders and digital content creation tools, e.g. Autodesk’s Arnold, Blender, SideFX’s Houdini, and NVIDIA’s Omniverse just to mention a few.},
+booktitle = {ACM SIGGRAPH 2021 Talks},
+articleno = {1},
+numpages = {2},
+keywords = {rendering, Sparse volumes, simulation, gpu data structures},
+location = {Virtual Event, USA},
+series = {SIGGRAPH '21}
+}

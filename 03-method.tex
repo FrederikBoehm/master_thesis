@@ -5,7 +5,7 @@ For our experiments, we follow the steps depicted in Figure \ref{fig:pipeline}.
     \centering
     \includegraphics[width=1.0\linewidth]{img/pipeline.png}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
-    \caption[Visualization of the pipeline the thesis built upon]{Visualization of our pipeline for \ac{lod} generation. Yellow files that are an input or output to green program components.}
+    \caption[Visualization of the pipeline the thesis built upon]{Visualization of our pipeline for \ac{lod} generation. Yellow boxes represent files that are inputs our outputs of green program components. Evaluation is partially done by visual comparison and by computing image quality metrics.}
     \label{fig:pipeline}
 \end{figure}
 We first take the surface meshes and apply the filtering procedure to obtain the volume grids.
@@ -13,6 +13,9 @@ Additionally we save metadata like the bounding-box sizes of the grids, which we
 This generation step can either generate ground-truth scenes that only contain meshes or it can generate scenes that use \acp{lod}.
 The next step in the pipeline is the rendering of the scene, which uses mesh or volume files depending on the definitions in the generated scene file.
 Finally we evaluate our results by comparing the mesh-only renderings with the ones that use \ac{lod}.
+This is done regarding the image quality between the mesh-only renderings and the \ac{lod} renderings as well as the render performance.
+We are however not interested in the absolute render times, but rather in the relative times between the mesh and volume representations.
+This final evaluation step is explained in Chapter \ref{chap:results_and_discussion} while all other steps are subject of this chapter.
 
 Our surface models are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
 In total they occupy 1.2 GB of disk memory.
@@ -23,8 +26,11 @@ Apart from the models itself XfrogPlants also provides information of the sizes 
 As described in Section \ref{sec:transforming_meshes_into_volumes} we use the ray casting approach by \citeauthor{hybrid_mesh_volume_lods} with a few modifications for our filtering \cite{hybrid_mesh_volume_lods}.
 The ray casting is \ac{gpu} accelerated using OptiX \cite{parker_optix}.
 In contrast to \citeauthor{hybrid_mesh_volume_lods} we assume our particles to have an isotropic microflake projected area $\sigma$, meaning that it is not view dependent.
-This simplifies our optimization procedure for now, but we can still extend the procedure for anisotropic particles later.
-The origin of our rays are uniformly sampled in each voxel and the direction is uniformly sampled over the hemisphere.
+This greatly simplifies our optimization procedure as well as the distance sampling and transmittance estimation later during rendering.
+
+During filtering we place the voxel grid over the mesh and align it to three sides of the bounding box of the mesh.
+If the edge lengths of the mesh's bounding box do not evenly divide by the size of a voxel, we let the volume overlap on the non-aligned sides.
+In each voxel we then uniformly sample the origin of our rays and the direction of the rays is uniformly sampled over the unit sphere.
 \citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to a blurring since adjacent geometry is included in the density estimation.
 As \citeauthor{wang_object_space_aliasing} points out, this can reduce object space aliasing \cite{wang_object_space_aliasing}.
 However we think, that we can increase the spatial resolution while preserving the blurring by clipping the ray at a bounding sphere.
@@ -70,9 +76,9 @@ The Matrix $S$ serves later as a coordinate frame for sampling reflection direct
 
 % In total our attributes occupy 80 bytes of memory per voxel and we first represent them by a dense grid in the \ac{GPU}'s global memory.
 We represent these attributes as a dense grid in the \acs{gpu}'s global memory.
-OpenVDB cannot be used for this, because we were not able to integrate it in the CUDA device code, NanoVDB on the other hand, is a read-only grid.
+OpenVDB cannot be used for this, because we were not able to integrate it in the CUDA device code, NanoVDB on the other hand, is a read-only grid \cite{nanovdb}.
 Only after copying the dense grid to host memory we convert it into an OpenVDB grid and subsequently into a NanoVDB grid which we store to disk.
-Using NanoVDB however, imposes a limit of storing 32 bytes per voxel.
+Using NanoVDB however, imposes a limit of storing 32 bytes per voxel \cite{open_to_nanovdb}.
 Because our attributes occupy 80 bytes of memory we use quantization to represent the values in the grid and before doing computations like interpolation or shading we transform them back to the full width.
 The following table summarizes the size of all attributes in regular and quantized format (ignoring padding):
 \begin{center}
@@ -105,7 +111,7 @@ We generate 7 \acsp{lod} for voxel sizes from 0.1m to 6.4m, doubling the size of
 The number of voxels is then computed from the voxel size and the size of the trees.
 The reason for choosing a voxel size between 0.1m and 6.4m is because for finer voxels the grids quickly use more memory than their surface representations while choosing even larger sizes has no effect, since some trees are already represented by a single voxel on the coarsest level.
 The resulting grids occupy 940MB of disk space, where the finest \acsp{lod} are responsible for 65\% of this data.
-In chapter ... we discuss how dropping this \ac{lod} affects image quality and rendering times.
+In chapter \ref{chap:results_and_discussion} we discuss how dropping this \ac{lod} affects image quality and rendering times.
 
 Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the surface representation for some models.
 \begin{figure}[ht]
@@ -130,7 +136,8 @@ Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the sur
 
 \section{Scene Generation}
 \label{sec:scene_generation}
-The scene generator uses the volume metadata that is exported during filtering and generates a circular forest with uniformly distributed trees.
+We implement the scene generator in Python.
+It uses the volume metadata that is exported during filtering and generates a circular forest with uniformly distributed trees.
 Our generator uses a rejection sampling approach, rejecting samples that are too close to another.
 It is therefore similar to a poisson disk sampler \cite{poisson_sampling}, however it uses varying spacing between the samples depending on the model size.
 This why we exported the bounding box sizes of the volumes during filtering.
@@ -155,6 +162,7 @@ This effect is visualized in Figure \ref{fig:bounding_sizes}.
 	\label{fig:bounding_sizes}
 \end{figure}
 Then we sample a class \textit{Large}, \textit{Medium}, \textit{Small}, which contain tree models in the corresponding sizes.
+We assigned trees that grow 20-35 meters to class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
 This allows us to control the age of the forest, if we want an old forest we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
 We then choose a tree from this class, sample a position in the circle and check whether it collides with existing models.
 This step is a significant performance bottleneck for all rejection based sampling procedures.
@@ -165,12 +173,24 @@ We then have to check for a collision only in the segments in which our model is
 The collision test itself is based on cylinders around the bounding boxes of the models, which may not overlap.
 This acceleration reduces the scene generation with our Python script to a managable runtime of 6 minutes.
 
-If we generate a scene with \acsp{lod} we now have to determine the appropriate \ac{lod} for the model given the distance to the camera.
+Having successively sampled an empty place in the circular forest we still get an overlap if we place a model at this exact position.
+The reason is that the bounding box of the model might be asymmetrical.
+For example: Consider a bounding box $BB_{min}=(-2.5, -5.0)$, $BB_{max}=(6.0, 10.0)$ and a sampled location $Pos_{center}=(1.5, 3.0)$.
+The sampled location gives us the position where the \textit{center} of the bounding box namely $BB_{center}=(1.75, 2.5)$ has to be located.
+However, all transformation matrices we use operate on the \textit{origin} of the model space.
+Thus we have to compute the position of the origin in world space using:
+\begin{equation*}
+    Pos_{origin}=\frac{2Pos_{center}-Scale(BB_{min}+BB_{max})}{2},
+\end{equation*}
+where $Scale$ is an additional scaling factor for controlling the size of the model.
+In our example, assuming a scaling of 1, this gives a location for the model of $Pos_{origin}=(-0.25, 0.5)$.
+
+If we generate a ground truth scene, meaning that it contains only mesh models, we can now add the model to the scene, else we now have to determine the appropriate \ac{lod} for the model given the distance to the camera.
 Knowledge of the camera position, gaze direction, the \ac{fov} and the sensor resolution are essential for that.
 Note that a consequence is, that this information is baked into the scene description and moving the camera during rendering leads to a mismatch of the \acp{lod}.
 Generating the scene in the renderer on the fly is currently no option, since this would lead to significantly worse performance of the renderer.
 For positions outside the view frustum, we choose the coarsest \ac{lod} since these are not visible and only participate in indirect lighting.
-If the position is inside the view frustum, we project the eight bounding box vertices of the coarsest volume on the image plane and compute the area of their convex hull using \texttt{scipy.spatial.ConvexHull}.
+If the position is inside the view frustum, we project the eight bounding box vertices of the coarsest volume on the image plane and compute the area of their convex hull using \texttt{scipy.spatial.ConvexHull} \cite{scipy}.
 This gives us the number of pixels that the volume covers on the sensor.
 We want to select \acp{lod} based on the heuristic that each voxel covers at most one pixel:
 \begin{equation*}
@@ -196,7 +216,20 @@ We intersect the rays with the bounding box which gives us the number of voxels 
 By multiplying the results from both rays we get the number of voxels a rectangle located at the bounding box center intersects.
 The ground truth value for the number of intersected voxels by a plane can be different, since a plane intersecting a cube does not necessarily give a rectangle.
 However we found that our approach closely approximates the true value.
-Having computed the number of voxels we can now choose the coarsest \ac{lod} that still fulfills our heuristic.
+Having computed the number of voxels we can now choose the coarsest \ac{lod} that still fulfills our heuristic and add it to our scene.
+
+As written before we repeat this procedure 100000 times to get a scene with 9924 trees, which are distributed over a circular area with a radius of 1000 meters.
+Figure \ref{fig:visualize_lods} shows this scene rendered from the top with colored bounding boxes of the volumes.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\linewidth]{img/visualize_lods.jpg}
+    % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
+    \caption[Visualization of a \ac{lod} scene]{Visualization of a debug view of the generated scene using our heuristic. The different voxel sizes between each \ac{lod} are visualized by different colors of the bounding boxes. The colors range from blue, which represents the finest \ac{lod} with a voxel size of 0.1m to red which represents the \acsp{lod} with a voxel size of 6.4m.}
+    \label{fig:visualize_lods}
+\end{figure}
+It is clearly visible that we start rendering with meshes and then switch to successively coarser \acsp{lod} with further distance from the camera.
+Additionally we see the frustum of the camera: Within the view frustum we select between different \acsp{lod} while we simply choose the coarsest \ac{lod} with a voxel size of 6.4 meters ourside the frustum.
+
 
 \section{Rendering}
 \label{sec:rendering}
@@ -206,6 +239,8 @@ For fast convergence we employ next event estimation and use importance sampling
 Russian roulette is used to terminate insignificant paths.
 In order to render scenes with many meshes and volumes, we use instancing.
 A certain mesh or volume thus has to occupy \ac{gpu} memory just once and for each usage an instance is created, each with its own model transformation.
+We do the same for textures, loading only textures that differ in their file path.
+Each material then stores a pointer to the memory location of the texture.
 
 Our surfaces use the lambertian diffuse \cite{lambert} and the Trowbridge-Reitz \cite{trowbridge_reitz} microfacet \ac{brdf}, which is the general form of the GGX \ac{brdf}.
 As Figure \ref{fig:leaf_gloss} shows, real leafs can have a specular gloss, therefore we incorporate a specular \ac{brdf}.
@@ -248,8 +283,7 @@ We can therefore write our combined \ac{brdf} as:
 
 As described in Section \ref{subsec:solving_beer_lambert_law_in_heterogeneous_media}, we use brick grid by \citeauthor{brick_grid} \cite{brick_grid} to represent the density values of a volume.
 The authors also provide an implementation of the distance sampling procedure they use \cite{brick_grid}, which we rougly follow.
-The full distance sampling algorithm that we use can be found in Appendix ..., in summary we use the distance sampling by \cite{brick_grid} until we find an interaction. % TODO: Add Appendix
-We then perform a lookup in the NanoVDB grid to retrieve a filtered normal, diffuse and specular color, the index of refraction and the \ac{sggx} matrix $S$.
+We use their distance sampling until we find an interaction and then perform a lookup in the NanoVDB grid to retrieve a filtered normal, diffuse and specular color, the index of refraction and the \ac{sggx} matrix $S$.
 Since our procedure returns the albedo at this point of the medium, we now have to compute which frequencies of the light are absorbed, which is given by the color.
 Just as for our surface rendering we apply the Fresnel term to weight the diffuse and specular color.
 Because the Fresnel term requires a surface normal, we now use the filtered normal that we also stored in the NanoVDB grid.
@@ -258,8 +292,9 @@ We weight the specular color by $F$ and the diffuse color by $1-F$ to obtain our
 At each sampled interaction in the medium we sample a new ray direction using the \ac{sggx} phase function.
 Again we use the Fresnel term, this time to get a probability whether we should sample the diffuse phase function or the specular phase function.
 Both phase functions rely on sampling a microflake normal from the \ac{sggx} \acl{vndf}.
-In contrast to \citeauthor{sggx} \cite{sggx}, we do not align this microflake normal with the ray direction $\omega_o$, but with the filtered normal $n$.
-Figure \ref{fig:tree_normal_maps} illustrates the normals of the mesh and when the microflake normal is aligned with direction $\omega_o$ or the filtered normal.
+% In contrast to \citeauthor{sggx} \cite{sggx}, we do not align this microflake normal with the ray direction $\omega_o$, but with the filtered normal $n$.
+In contrast to \citeauthor{sggx} \cite{sggx}, we do not build a coordinate frame around the ray direction $\omega_o$, but we build it around the filtered normal $n$ to transform the microflake normal to world space.
+Figure \ref{fig:tree_normal_maps} illustrates the normals of the mesh in world space and when the microflake normal is transformed with a coordinate frame around the direction $\omega_o$ or the filtered normal.
 \begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.3\linewidth}
@@ -280,8 +315,12 @@ Figure \ref{fig:tree_normal_maps} illustrates the normals of the mesh and when t
         \caption{}
         % \label{fig:bounding_size_1}
     \end{subfigure}
-    \caption[Visualization of normals with meshes and volumes]{Visualization of the normals of the surface mesh (a), and of volumetric \acsp{lod} when the microflake normal is aligned with the direction $\omega_o$ (b) and when it is aligned with the filtered normal (c).
-             Although being more blurry, aligning the microflake normal with the filtered normal gives close results to the true normals.}
+    \caption[Visualization of normals with meshes and volumes]{Visualization of the normals of the surface mesh (a), and of volumetric \acsp{lod} when the microflake normal is transformed with a coordinate frame around the direction $\omega_o$ (b) and when it is transformed with a coordinate frame around the filtered normal (c).
+             Although being more blurry, transforming the microflake normal based on the filtered normal gives close results to the true normals.}
 	\label{fig:tree_normal_maps}
 \end{figure}
-It is obvious, that aligning the microflake normal with the outgoing direction $\omega_o$ gives different normals than the normals given by the mesh, while aligning it with the filtered normal gives normals that are distributed around the filtered normal.
+It is obvious, that transforming the microflake normal based on the outgoing direction $\omega_o$ gives different normals than the normals given by the mesh, while transforming it with a coordinate frame around the filtered normal gives normals that are distributed around the filtered normal.
+
+Having sampled a reflection direction in the volume we move the origin of the new ray along this direction to the edge of the current voxel.
+This is an idea by \citeauthor{vicini2021non} that prevents multiple scattering within a voxel \cite{vicini2021non}.
+According to the authors multiple scattering can lead to paths passing through a voxel with a high density, which leads to an energy loss producing substantially darker looking volumes \cite{vicini2021non}.

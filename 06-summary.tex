@@ -1,0 +1,10 @@
+\chapter{Summary}
+\label{chap:summary}
+This thesis presented an approach for filtering textured surface meshes, thereby converting them into volumes.
+The resulting volumetric representations occupy 22\% less disk space.
+We further developed a scene generator that uniformly distributes models on a circular area.
+It selects an appropriate \ac{lod} based on the number of pixels that a volume covers compared to the number of voxels visible from the camera.
+We then rendered a scene containing only meshes and scenes with different \ac{lod} selection strategies in our custom physically based path tracer.
+We find that we can decrease render times by up to 27\% while introducing a \FLIP error of 0.096.
+Lower \FLIP errors are possible at the cost of higher render times.
+We can therefore conclude that volumetric representations of surface meshes can reduce rendertimes while introducing noticeable differences in the image quality in a side by side comparison.

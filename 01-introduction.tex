@@ -1,8 +1,6 @@
 \chapter{Introduction}
 \label{chap:intro}
 
-\section{Motivation}
-\label{sect:motivation}
 In recent years computer hardware became increasingly powerful, allowing now even real time raytracing with the introduction of the RTX technology by NVIDIA in 2018 \cite{turing_whitepaper}.
 In parallel to the advances in computer hardware the scenes to be rendered also became more and more complex reaching more than 70 GB for a single shot in the film Coco \cite{pixarxpu}.
 While high detailed geometry and textures are required for close-up shots they impair performance when rendering them at large distances like in a landscape scene.
@@ -14,6 +12,7 @@ Since the aliasing effect increases with distance we generate multiple \textit{l
 In this thesis we want to explore another approach for \acl{lod} rendering which combines the information of surface meshes and textures into a single representation using volumes.
 
 We introduce fundamental concepts to this thesis in Chapter \ref{chap:fundamentals} and explain our method in Chapter \ref{chap:method}.
+In Chapter \ref{chap:results_and_discussion} we present our results and discuss them before we look at further improvements to our approach in Chapter \ref{chap:future_work} and summarize our findings in Chapter \ref{chap:summary}.
 First however, we take a look at the research that has been published in our domain in the following section.
 
 \section{Related Work}
@@ -45,6 +44,8 @@ We therefore explain the theoretical background extensively in section \ref{subs
 
 \subsection{Efficient Volume Rendering}
 Although this thesis does not provide contributions to the optimization of volume rendering itself, using these optimizations is key for competing with hardware accelerated ray tracing.
+A popular algorithm in volume rendering is \textit{delta tracking} \cite{woodcock}, which needs a majorant of the particle density of the volume.
+In its basic form this is a global majorant over the entire volume, however for strongly heterogeneous media it is more efficient to use local majorants \cite{novak_overview}.
 
 In order to obtain local density majorants for delta tracking, \citeauthor{yue_space_partitioning} compares different space partitioning techniques regarding their performance implications \cite{yue_space_partitioning}.
 These encompass a uniform grid partitioning, kd-trees and octrees \citeauthor{yue_space_partitioning}.
@@ -176,8 +177,11 @@ We go into the details of their filtering procedure in section \ref{sec:transfor
 
 
 \section{Contributions}
-The thesis provides answers to the following questions:
+Our work provides the following contributions:
 \begin{itemize}
-	\item Can meshes be represented by volumes without a noticeable loss in quality?
-	\item How does the performance change when representing meshes by volumes at different distances?
+    \item Implementation of a \ac{gpu} accelerated application for transforming triangle meshes into close volumetric representations in different resolutions and storing these representations in a common format.
+    \item Extenting these volumetric representations by attributes like color, normals and other material properties to closer approximate surfaces.
+    \item Implementation of a \ac{gpu} based renderer capable of rendering surface meshes and volumes.
+    \item A qualified heuristic to determine which \ac{lod} should be rendered.
+    \item Evaluation of the image quality and rendering performance when triangle meshes are approximated by volumetric \acsp{lod}.
 \end{itemize}
