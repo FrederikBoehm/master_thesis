@@ -13,12 +13,13 @@ Additionally we save metadata like the bounding-box sizes of the grids, which we
 This generation step can either generate ground-truth scenes that only contain meshes or it can generate scenes that use \acp{lod}.
 The next step in the pipeline is the rendering of the scene, which uses mesh or volume files depending on the definitions in the generated scene file.
 Finally we evaluate our results by comparing the mesh-only renderings with the ones that use \ac{lod}.
-This is done regarding the image quality between the mesh-only renderings and the \ac{lod} renderings as well as the render performance.
+This is done regarding the image quality and the render performance between the mesh-only renderings and the \ac{lod} renderings.
 We are however not interested in the absolute render times, but rather in the relative times between the mesh and volume representations.
 This final evaluation step is explained in Chapter \ref{chap:results_and_discussion} while all other steps are subject of this chapter.
 
-Our surface models are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
-In total they occupy 1.2 GB of disk memory.
+Although our pipeline can be used with arbitrary models, we only use tree models with it.
+In total these are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
+Meshes and textures together occupy 1.2 GB of disk memory.
 Apart from the models itself XfrogPlants also provides information of the sizes the trees grow during their lifespan, which we also need during filtering and scene generation.
 
 \section{Mesh filtering}
@@ -30,7 +31,7 @@ This greatly simplifies our optimization procedure as well as the distance sampl
 
 During filtering we place the voxel grid over the mesh and align it to three sides of the bounding box of the mesh.
 If the edge lengths of the mesh's bounding box do not evenly divide by the size of a voxel, we let the volume overlap on the non-aligned sides.
-In each voxel we then uniformly sample the origin of our rays and the direction of the rays is uniformly sampled over the unit sphere.
+In each voxel we then sample the origin of our rays on a cubic uniform domain and the direction of the rays is uniformly sampled over the unit sphere.
 \citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to a blurring since adjacent geometry is included in the density estimation.
 As \citeauthor{wang_object_space_aliasing} points out, this can reduce object space aliasing \cite{wang_object_space_aliasing}.
 However we think, that we can increase the spatial resolution while preserving the blurring by clipping the ray at a bounding sphere.
@@ -66,7 +67,7 @@ As stated in Section \ref{sec:transforming_meshes_into_volumes}, we cannot solve
 \begin{equation*}
     \rho_{i+1}=\rho_i - \alpha (P_{occ,volume} - P_{occ,mesh}),
 \end{equation*}
-where $i$ denotes the iteration, $\alpha$ is a learning rate, $P_{occ,mesh}$ is the ratio of geometry hits to the total number of rays casted and $P{occ,volume}$ is the probability that a medium interaction takes place given the density $\rho$.
+where $i$ denotes the iteration, $\alpha$ is a learning rate, $P_{occ,mesh}$ is the ratio of geometry hits to the total number of rays casted and $P_{occ,volume}$ is the probability that a medium interaction takes place given the density $\rho$.
 It is computed by Monte Carlo integrating Equation \ref{eq:our_filtering_equation}, so our estimator has the form:
 \begin{equation*}
     1 - \frac{1}{N}\sum_{n=1}^{N} e^{-\rho\sigma ray_l(\omega_n)} = P_{occ,volume}.
@@ -76,10 +77,10 @@ The Matrix $S$ serves later as a coordinate frame for sampling reflection direct
 
 % In total our attributes occupy 80 bytes of memory per voxel and we first represent them by a dense grid in the \ac{GPU}'s global memory.
 We represent these attributes as a dense grid in the \acs{gpu}'s global memory.
-OpenVDB cannot be used for this, because we were not able to integrate it in the CUDA device code, NanoVDB on the other hand, is a read-only grid \cite{nanovdb}.
+OpenVDB cannot be used for this, because it is incompatible with CUDA device code \cite{museth_nanovdb}, NanoVDB on the other hand, is a read-only grid \cite{nanovdb}.
 Only after copying the dense grid to host memory we convert it into an OpenVDB grid and subsequently into a NanoVDB grid which we store to disk.
-Using NanoVDB however, imposes a limit of storing 32 bytes per voxel \cite{open_to_nanovdb}.
-Because our attributes occupy 80 bytes of memory we use quantization to represent the values in the grid and before doing computations like interpolation or shading we transform them back to the full width.
+Using NanoVDB however, imposes a limit of storing 32 bytes per voxel which we can't increase in the limited time frame of the thesis \cite{open_to_nanovdb}.
+Because our attributes occupy 80 bytes of memory, we use quantization to represent the values in the grid and before doing computations like interpolation or shading, we transform them back to the full width.
 The following table summarizes the size of all attributes in regular and quantized format (ignoring padding):
 \begin{center}
     \begin{tabular}{| c | c | c | }
@@ -120,13 +121,13 @@ Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the sur
             \hline
             Model & Mesh & Volume \newline(Voxel size = 0.1m) & Volume \newline(Voxel size = 0.8m) \\
             \hline
-            Acer\newline rubrum & \adjustimage{height=3.9cm,valign=m}{img/EA01a_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/EA01a_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/EA01a_0.8.png} \\
+            Acer\newline rubrum\newline adult & \adjustimage{height=3.9cm,valign=m}{img/EA01a_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/EA01a_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/EA01a_0.8.png} \\
             \hline
-            Acacia\newline sophorae & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_0.8.png} \\
+            Acacia\newline sophorae 9 & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_0.8.png} \\
             \hline
-            Celtis\newline australis & \adjustimage{height=3.9cm,valign=m}{img/EU06m_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/EU06m_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/EU06m_0.8.png} \\
+            Celtis\newline australis\newline medium & \adjustimage{height=3.9cm,valign=m}{img/EU06m_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/EU06m_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/EU06m_0.8.png} \\
             \hline
-            Pinus\newline muricata & \adjustimage{height=3.9cm,valign=m}{img/CL13a_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/CL13a_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/CL13a_0.8.png} \\
+            Pinus\newline muricata\newline adult & \adjustimage{height=3.9cm,valign=m}{img/CL13a_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/CL13a_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/CL13a_0.8.png} \\
             \hline
         \end{tabularx}
     \end{center}
@@ -140,7 +141,7 @@ We implement the scene generator in Python.
 It uses the volume metadata that is exported during filtering and generates a circular forest with uniformly distributed trees.
 Our generator uses a rejection sampling approach, rejecting samples that are too close to another.
 It is therefore similar to a poisson disk sampler \cite{poisson_sampling}, however it uses varying spacing between the samples depending on the model size.
-This why we exported the bounding box sizes of the volumes during filtering.
+This is why we exported the bounding box sizes of the volumes during filtering.
 First we identify the largest bounding box for each model.
 Differences in the bounding box size of a model can occur, because during filtering we make sure that the mesh is fully enclosed by voxels for a given voxel size.
 This effect is visualized in Figure \ref{fig:bounding_sizes}.
@@ -162,8 +163,9 @@ This effect is visualized in Figure \ref{fig:bounding_sizes}.
 	\label{fig:bounding_sizes}
 \end{figure}
 Then we sample a class \textit{Large}, \textit{Medium}, \textit{Small}, which contain tree models in the corresponding sizes.
-We assigned trees that grow 20-35 meters to class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
-This allows us to control the age of the forest, if we want an old forest we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
+We assign trees that grow 20-35 meters to class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
+This allows us to control the age of the forest.
+For example, if we want an old forest we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
 We then choose a tree from this class, sample a position in the circle and check whether it collides with existing models.
 This step is a significant performance bottleneck for all rejection based sampling procedures.
 In our case we need 100000 sample positions to generate a scene with only 9924 trees.
@@ -199,7 +201,7 @@ We want to select \acp{lod} based on the heuristic that each voxel covers at mos
 Therefore, we now have to compute the number of voxels that we see.
 Calculating the product of the number of voxels in depth, height and width gives too many voxels, since some of the voxels are hidden by others.
 Computing $depth \times height$, $depth \times width$ or $height \times width$ is only valid for viewing angles that are perpendicular to the surface of the voxel grid.
-Another approach is to position a plane at the center of the grid and orient towards the camera.
+Another approach is to position a plane at the center of the grid and orient it towards the camera.
 The number of voxels that this plane intersects would then be a ground truth value for the voxels that we see.
 Evaluating this however, is really expensive since each voxel has to be tested whether it intersects the plane.
 We choose a faster approach that approximates this value and is depicted in Figure \ref{fig:voxel_estimation}.
@@ -224,11 +226,11 @@ Figure \ref{fig:visualize_lods} shows this scene rendered from the top with colo
     \centering
     \includegraphics[width=0.5\linewidth]{img/visualize_lods.jpg}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
-    \caption[Visualization of a \ac{lod} scene]{Visualization of a debug view of the generated scene using our heuristic. The different voxel sizes between each \ac{lod} are visualized by different colors of the bounding boxes. The colors range from blue, which represents the finest \ac{lod} with a voxel size of 0.1m to red which represents the \acsp{lod} with a voxel size of 6.4m.}
+    \caption[Visualization of a \ac{lod} scene]{Visualization of a debug view of the generated scene using our heuristic. The different voxel sizes between each \ac{lod} are visualized by different colors of the bounding boxes. The colors range from blue, which represents the finest \ac{lod} with a voxel size of $\SI{0.1}{m}$, to red which represents the \acsp{lod} with a voxel size of $\SI{6.4}{m}$.}
     \label{fig:visualize_lods}
 \end{figure}
 It is clearly visible that we start rendering with meshes and then switch to successively coarser \acsp{lod} with further distance from the camera.
-Additionally we see the frustum of the camera: Within the view frustum we select between different \acsp{lod} while we simply choose the coarsest \ac{lod} with a voxel size of 6.4 meters ourside the frustum.
+Additionally we see the frustum of the camera: Within the view frustum we select between different \acsp{lod} while we simply choose the coarsest \ac{lod} with a voxel size of 6.4 meters outside the frustum.
 
 
 \section{Rendering}

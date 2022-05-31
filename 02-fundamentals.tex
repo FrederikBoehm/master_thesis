@@ -1,6 +1,23 @@
 \chapter{Fundamentals}
 \label{chap:fundamentals}
 This chapter introduces the fundamental concepts necessary for the thesis.
+We use these notations throughout the thesis:
+\begin{center}
+    \begin{tabular}{ l  l }
+        % \hline
+        Notation & Definition \\
+        \hline
+        $\omega_i$ & Direction from a point of interaction towards the light source \\
+        % \hline
+        $\omega_o$ & Direction from a point of interaction towards the camera \\
+        $\omega_h$ & Half vector: $\omega_h=\frac{\omega_i + \omega_o}{||\omega_i + \omega_o||}$ \\
+        % \hline
+        Bold letters ($\boldsymbol{x}$, $\boldsymbol{y}$, ...) & Points in space \\
+        % \hline
+        $n_{\boldsymbol{x}}$ & The normal at point $\boldsymbol{x}$ \\
+        % \hline
+    \end{tabular}
+\end{center}
 
 \section{Surface Path Tracing}
 We aim to implement a physically based renderer in order to validate the results of our experiments.
@@ -9,7 +26,7 @@ The key property of physically based approaches is the conservation of energy wh
     \label{eq:render_equation}
     L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \int_{\mathcal{H}^2} f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_x \cdot w_i| d\omega_i.
 \end{equation}
-It states that the radiance at a point $\boldsymbol{x}$ in direction $\omega_o$ is given by the emitted radiance at this point plus the integral over the hemisphere $\mathcal{H}^2$ of the \ac{brdf} $f$ times the radiance $L$ coming from $\omega_i$ times the absolute value of the dot product between the normal $n_\textbf{x}$ and the incident direction $\omega_i$.
+It states that the radiance at a point $\boldsymbol{x}$ in direction $\omega_o$ is given by the emitted radiance at this point plus the integral over the hemisphere $\mathcal{H}^2$ of the \ac{brdf} $f$ times the emitted radiance $L$ of a light source at point $\boldsymbol{y}$ in direction $\omega_i$ times the absolute value of the dot product between the normal $n_\textbf{x}$ and the incident direction $\omega_i$.
 Since this equation is generally not analytically solvable we can use Monte Carlo integration to solve it numerically.
 For that we have to replace the integral by a sum and divide each summand by the number of summands and by the probability of creating a sample $i$ \cite{pbr}:
 \begin{equation*}
@@ -28,11 +45,11 @@ In short, importance sampling reduces variance by sampling from a distribution t
 
 \section{Volumetric Path Tracing}
 Since we want to represent our \acsp{lod} by volumes, the following chapter introduces how path tracing can be extended to volumes.
-Generally volumes are three dimensional regions of space that are not vacuum and therefore have a density $\rho > 0 \frac{1}{m^3}$ \cite{pbr}.
+Generally volumes are three dimensional regions of space that are not vacuum and therefore have a density ${\rho > \SI{0}{\frac{1}{\m^3}}}$ \cite{pbr}.
 Thus, $\rho$ gives us the number of particles in a unit volume \cite{novak_overview}.
 We can store the density values at discrete positions, which are called \textit{voxels} and arrange these voxels in three dimensional grids \cite{pbr}.
 Although it is conceptually helpful to think of volumes as these \textit{dense grids} it leads to inefficient memory representations, since vacuum regions still must be stored.
-For example if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx 48\%$ of the voxels would store a density of zero.
+For example, if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx \SI{48}{\%}$ of the voxels will store a density of zero.
 Therefore we would like to only store relevant values, which is called a \textit{sparse grid}.
 \citeauthor{museth_vdb} use this approach in the OpenVDB library and store the grid in a B+tree \cite{museth_vdb}.
 For fast traversal, leaf and internal nodes still use dense arrays but the root node is represented by a hash table to allow for a dynamic number of voxels \cite{museth_vdb}.
@@ -43,7 +60,7 @@ In memory the hierarchical tree is represented continuously without any pointers
 
 \subsection{Theory of Light Propagation in Participating Media}
 \label{subsec:theory_of_light_propagation_in_participating_media}
-For volumes, the radiance along a ray is determined by the in- and out-scattering as well as the emission and absorption properties of the medium as figure \ref{fig:novak_volume_effects} visualizes\cite{novak_overview}.
+For volumes, the radiance along a ray is determined by the in- and out-scattering as well as the emission and absorption properties of the medium as Figure \ref{fig:novak_volume_effects} visualizes \cite{novak_overview}.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.7\linewidth]{img/novak_volume_effects.png}
@@ -92,13 +109,13 @@ As described in section \ref{subsec:theory_of_light_propagation_in_participating
 We therefore need a way to sample interactions on which the light than is scattered or absorbed.
 At distance $t$ the Beer-Lambert law from equation \ref{eq:beer_lambert_law} gives us the proportion of light that did not hit a particle $P(X > t) = T(t)$ \cite{novak_overview}.
 Therefore we can compute the fraction of light that hit a particle by \cite{novak_overview}
-\begin{equation}
+\begin{equation*}
     F(t) = 1 - T(t).
-\end{equation}
+\end{equation*}
 For a homogeneous medium the probability of hitting a particle is therefore
-\begin{equation}
+\begin{equation*}
     F(t) = 1 - e^{\mu_t t},
-\end{equation}
+\end{equation*}
 since $\mu_t$ is constant in the whole medium \cite{novak_overview}.
 After rearranging, this gives us a method to sample free path distances in homogeneous media:
 \begin{equation}
@@ -107,7 +124,7 @@ After rearranging, this gives us a method to sample free path distances in homog
 \end{equation}
 where $\xi$ is a uniform random number in the interval $[0, 1)$ \cite{novak_overview}.
 
-However for heterogeneous media distance sampling is more complex, since $\mu_t$ is no longer constant.
+However, for heterogeneous media distance sampling is more complex, since $\mu_t$ is no longer constant.
 We could interpret each voxel as a homogeneous medium and sample a target transmittance in the interval $(0, 1]$ \cite{novak_overview}.
 We than have to accumulate the transmittance over all voxels that a ray passes until it falls below the target transmittance \cite{novak_overview}.
 This method is called \textit{regular tracking} \cite{sutton_regular_tracking}.
@@ -127,18 +144,19 @@ We first have to homogenize the medium by adding fictious matter until the extin
 This fictious matter does not influence the scattering or absorption behavior \cite{novak_overview}.
 We can then iteratively sample new distances using equation \ref{eq:distance_sampling} with $\mu_t=\bar{\mu_t}$ and compare the local extinction coefficient $\mu_t(\boldsymbol{x})$ with the majorant $\bar{\mu_t}$ using a uniform random number $\xi\in[0,1)$ \cite{spectral_and_decomposition_tracking}.
 If $\xi<\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a hit with a particle and can exit the iteration, if $\xi>=\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a null-collision meaning that we have to continue with sampling a new distance $t$ \cite{spectral_and_decomposition_tracking}.
-Note that for a constant cross-sectional area $\sigma_t$ we use can use the ratio between the local density $\rho(\boldsymbol{x})$ and the density majorant $\bar{\rho}$ instead.
+Note that for a constant cross-sectional area $\sigma_t$ we can use the ratio between the local density $\rho(\boldsymbol{x})$ and the density majorant $\bar{\rho}$ instead.
 To estimate the transmittance in a heterogeneous medium we employ a similar algorithm called \textit{ratio tracking} \cite{novak_ratio_tracking}.
 As opposed to delta tracking, ratio tracking does not compare whether the interaction is a null-collision \cite{novak_ratio_tracking}.
 Instead it updates the transmission with $T_{new} = T_{old}(1 - \frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}})$ \cite{novak_ratio_tracking}.
 
-Since both algorithms use a global majorant of the extinction they perform poorly in media where the extinction varies strongly across the medium.
-Therefore we use local majorants as suggested in the paper \citetitle{brick_grid} by \citeauthor{brick_grid} \cite{brick_grid}.
+Since both algorithms use a global majorant of the extinction, they perform poorly in media where the extinction varies strongly across the medium.
+Therefore we use local majorants as suggested by \citeauthor{brick_grid} \cite{brick_grid}.
+This idea is visualized in Figure \ref{fig:brick_grid_majorants}
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.9\linewidth]{img/brick_grid_majorants.png}
     \caption[Visualization of local density majorants]{Visualization of the concept of local majorants. These allow to sample distances and estimate transmittance more efficiently (Image from \cite{brick_grid}).}
-    \label{fig:brick_grid_datastructure}
+    \label{fig:brick_grid_majorants}
 \end{figure}
 To store the volume data we use three textures.
 First we use an \textit{atlas texture} to store \textit{bricks} which are groups of $8 \times 8 \times 8$ voxels \cite{brick_grid}.
@@ -147,15 +165,16 @@ This texture therefore links a position in space to a brick of data in the atlas
 Finally we store the minorant and majorant of each brick in the \textit{range texture} \cite{brick_grid}.
 These are used to scale the density values in the atlas texture to the interval $[0, 1]$ \cite{brick_grid}.
 The range texture additionally has three mipmap levels which allows to have local majorants at different scales \cite{brick_grid}.
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.9\linewidth]{img/brick_grid_datastructure.png}
-    \caption[Datastructure of brick grid]{Visualization of the internal datastructure of brick grid. It uses a range texture, containing minorants and majorants and an indirection texture which links world positions to the density values in the atlas texture. (Image from \cite{brick_grid}).}
-    \label{fig:brick_grid_datastructure}
-\end{figure}
 Since the resulting atlas texture no longer has spatial coherence, hardware interpolation by the texture unit is not possible \cite{brick_grid}.
 Therefore we employ a form of stochastic lookup where we jitter the lookup point by $\pm0.5$ voxels before doing point sampling \cite{brick_grid}.
 When having a large number of lookups, as it is the case in Monte Carlo integration, this is equivalent to trilinear interpolation without introducing a significant overhead \cite{brick_grid}.
+In Figure \ref{fig:brick_grid_datastructure} we show the introduced textures visually.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{img/brick_grid_datastructure.png}
+    \caption[Datastructure of brick grid]{Visualization of the internal datastructure of brick grid. It uses a range texture, containing minorants and majorants and an indirection texture which links world positions to the density values in the atlas texture (Image from \cite{brick_grid}).}
+    \label{fig:brick_grid_datastructure}
+\end{figure}
 
 For distance sampling and transmittance estimation we first sample a target optical thickness $\tau_{target}=-ln(1-\xi)$ \cite{brick_grid}.
 We then accumulate the optical thicknesses of all bricks along a ray until the accumulated thickness exceeds the target thickness \cite{brick_grid}.
@@ -171,9 +190,9 @@ This is repeated until a distance is successfully sampled, the transmittance est
 In Equation \ref{eq:in_scattered_radiance} the term of a \textit{phase function} was already introduced, now we want to explain this concept in more detail.
 Similar like a \acs{brdf} gives the amount of light scattered into a certain direction on a surface, a phase function gives this amount in a volume \cite{novak_overview}.
 The simplest phase function possible is an isotropic phase function with the form
-\begin{equation}
+\begin{equation*}
     f_p(\omega_o, \omega_i)=\frac{1}{4\pi}.
-\end{equation}
+\end{equation*}
 As it can be seen it has a constant value for all directions $\omega_o$, $\omega_i$ on the unit sphere \cite{novak_overview}.
 
 Since we want our \acp{lod} to look similar like the corresponding mesh representation, an isotropic phase function is not sufficient.
@@ -182,35 +201,35 @@ Particularly it is similar to microfacet models like the GGX \acs{brdf} \cite{gg
 The idea behind the GGX \ac{brdf} and other microfacet models is that a surface can be modeled by a distribution of normals which describe the roughness of the surface at a certain point \cite{ggx}.
 Expanding on this idea \citeauthor{microflake} \cite{microflake} introduced the microflake framework which models the medium as two-sided specularly reflecting flakes which are distributed according to a certain \ac{ndf}.
 \citeauthor{sggx} \cite{sggx} define the \ac{ndf} for the SGGX phase function as:
-\begin{equation}
+\begin{equation*}
     D(\omega_m)=\frac{1}{\pi \sqrt{|S|}(\omega_m^T S^{-1} \omega_m)^2},
-\end{equation}
+\end{equation*}
 where $\omega_m$ is the direction of the microflake normal and $S$ is a 3 $\times$ 3 symmetric positive definite matrix which encodes the scattering properties.
-This \ac{ndf} can be seen as the extension of the GGX \acs{ndf} to the negative hemisphere:
+This \ac{ndf} can be seen as the extension of the GGX \acs{ndf} to the negative hemisphere as Figure \ref{fig:sggx_ndf} shows.
 \begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{img/sggx_ndf_a.jpg}
-        \caption{GGX $D(\omega_m), \omega_m \in \Omega^+$ \cite{sggx}}
+        \caption{GGX $D(\omega_m), \omega_m \in \Omega^+$}
         \label{fig:sggx_ndf_a}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
         \includegraphics[width=1\linewidth]{img/sggx_ndf_b.jpg}
-        \caption{SGGX $D(\omega_m), \omega_m \in \Omega$ \cite{sggx}}
+        \caption{SGGX $D(\omega_m), \omega_m \in \Omega$}
         \label{fig:sggx_ndf_b}
     \end{subfigure}
-	\caption[Visualization of anisotropic \acsp{ndf}]{Visualization of anisotropic \acsp{ndf}. Note that the negative hemisphere of the SGGX \acs{ndf} is a mirroring of the positive hemisphere.}
-	\label{img:sggx_ndf}
+	\caption[Visualization of anisotropic \acsp{ndf}]{Visualization of anisotropic \acsp{ndf}. Note that the negative hemisphere of the SGGX \acs{ndf} is a mirroring of the positive hemisphere (Image from \cite{sggx}).}
+	\label{fig:sggx_ndf}
 \end{figure}
-Based on the \acs{ndf} the authors then introduce a \ac{vndf} $D_{\omega_o}(\omega_m)$ which is used for importance sampling of the phase function, since it reduces variance as opposed to the \acs{ndf} \cite{vndf_importance_sampling}.
+Based on the \acs{ndf} the authors then introduce a \ac{vndf} $D_{\omega_o}(\omega_m)$ which is used for importance sampling of the phase function, since it further reduces variance compared to the \acs{ndf} \cite{vndf_importance_sampling}.
 Another important concept in the mikroflake framework is the projected area $\sigma(\omega_o)$ of the microflakes.
-This is the area of the microflakes when projected onto a plane in direction $\omega_o$ \cite{sggx}.
+As depicted in Figure \ref{fig:sggx_projected_area}, this is the area of the microflakes when projected onto a plane in direction $\omega_o$ \cite{sggx}.
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.3\linewidth]{img/sggx_projected_area.png}
-    \caption[Illustration of the microflake projected area]{Projected area $\sigma(\omega_o)$ \cite{sggx}.}
+    \includegraphics[width=0.3\linewidth]{img/sggx_projected_area.jpg}
+    \caption[Illustration of the microflake projected area]{Illustration of the microflake projected area $\sigma(\omega_o)$, which is the area on a plane on which the microflakes are projected (Image from \cite{sggx}, with modification of the annotations).}
     \label{fig:sggx_projected_area}
 \end{figure}
 For the SGGX phase function the projected area is defined as \cite{sggx}:
@@ -221,14 +240,14 @@ For the SGGX phase function the projected area is defined as \cite{sggx}:
 where $\langle -,-\rangle$ denotes the clamped dot product \cite{sggx}.
 Having defined these terms the authors introduce the actual phase function which consists of a specular and a diffuse component.
 The specular component is evaluated as \cite{sggx}:
-\begin{equation}
+\begin{equation*}
     f{}^{spec}_p(\omega_o, \omega_i) = \frac{D(\omega_h)}{4 \sigma(\omega_o)}.
-\end{equation}
+\end{equation*}
 Importance sampling the specular component requires to sample a microflake normal $\omega_m$ from $D_{\omega_o}$ and the direction $\omega_o$ is reflected on this normal to generate an incident direction $\omega_i$ \cite{sggx}.
 For evaluating the diffuse phase function the authors propose to sample a normal $\omega_m$ from $D_{w_o}$ which gives an unbiased estimate of the following integral \cite{sggx}:
-\begin{equation}
+\begin{equation*}
     f{}^{diff}_p(\omega_o, \omega_i) = \frac{1}{\pi}\int_\Omega \langle\omega_i,\omega_m\rangle D_{\omega_o}(\omega_m) d\omega_m = \lim \limits_{N \to +\infty} \frac{1}{N} \sum_{n=1}^N \frac{1}{\pi} \langle\omega_i,\omega_m(n)\rangle.
-\end{equation}
+\end{equation*}
 $f{}^{diff}_p$ can then be importance sampled by generating a direction $\omega_m$ from $D_{\omega_o}$ and then sampling the hemisphere given by $\omega_m$ \cite{sggx}.
 
 \section{Transforming Meshes into Volumes}
@@ -241,9 +260,9 @@ To sample ray origins the authors use a \ac{pdf} $D_i=D_i^{cube} \ast D^{smooth}
 $D_i^{cube}$ is a cubic uniform \ac{pdf} around the voxel center and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
 The length of the rays is set to the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
 Each ray is intersected with the micro-geometry, the number of hits and the total number of rays casted determine the occlusion probability \cite{hybrid_mesh_volume_lods}:
-\begin{equation}
+\begin{equation*}
     P_{occ}=\frac{nbHits}{nbRays}.
-\end{equation}
+\end{equation*}
 Since a medium is defined on the density $\rho$ the authors solve the integral
 \begin{equation}
     1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho\sigma(\omega)ray_l} d\omega = P_{occ}

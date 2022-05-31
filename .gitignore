@@ -11,3 +11,7 @@ Arbeit.log
 Arbeit.out
 Arbeit.run.xml
 Arbeit.toc
+
+projects/*.jpg
+projects/*.png
+projects/.idea
