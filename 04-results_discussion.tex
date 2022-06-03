@@ -1,12 +1,17 @@
 \chapter{Results and Discussion}
 \label{chap:results_and_discussion}
 This chapter will present the results of the thesis and discusses possible limitations of our approach.
-We mainly compare the results visually to the ground truth but also provide the mean \FLIP \cite{flip} error to quantify the difference.
+As mentioned before we are interested in a sensible tradeoff between a performance improvement and a good image quality.
+We therefore measure the rendertime of our \ac{lod} approach and the mesh ground truth.
+The image quality is mainly determined by comparing the results visually to the ground truth but we also provide the mean \FLIP \cite{flip} error to quantify the difference.
 We choose this error because it gives a good approximation of the difference a human perceives when alternating between two images \cite{flip}.
-For the sake of completeness we also provide the mean \ac{ssim} and the \ac{psnr} in Appendix \ref{sec:psnr_and_ssim_errors} although they suggest a larger difference between the images than it visually appears.
+For the sake of completeness we also provide the mean \ac{ssim} and the \ac{psnr} in Appendix \ref{sec:psnr_and_ssim_errors}.
 All images are rendered in our custom physically based path-tracer that we introduced in Section \ref{sec:rendering}.
 We run the renderer on a system with an Intel Xeon E3-1230 v3 \ac{cpu}, 16 GB of RAM and a NVIDIA GeForce RTX 3060 \ac{gpu}.
+We performed experiments on the forest scene, which we present in Section \ref{sec:experiments_on_the_forest_scene} and on single model instances, which we discuss in Section \ref{sec:experiments_on_single_model_instances}.
 
+\section{Experiments on the Forest Scene}
+\label{sec:experiments_on_the_forest_scene}
 As we explained in Section \ref{sec:scene_generation} we choose our \acsp{lod} based on the heuristic that one voxel covers at most one pixel.
 Therefore Figure \ref{fig:render_comparison} shows a rendering of a scene that was generated with this heuristic compared to a reference rendering that uses only meshes.
 \begin{figure}[ht]
@@ -135,6 +140,7 @@ In Figure \ref{fig:lod_grid} we visualize the durations as well as the \FLIP err
         \centering
         \includegraphics[width=1\linewidth]{img/results/render_durations.png}
         \caption{}
+        \label{fig:lod_grid_durations}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
@@ -180,35 +186,71 @@ Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} vi
     \label{fig:visualize_lods_different_configurations}
 \end{figure}
 For the case of a fixed number of covered pixels and a minimum voxel size of $\SI{0.8}{\m}$ it is also interesting to note that the distance based \acsp{lod} still cover almost half of the circular forest, although they are barely visible from the main camera's perspective.
+Figure \ref{fig:visualize_lods_different_configurations_min_voxel_size_fixed} on the other hand, is analogous to the first column of Figure \ref{fig:lod_grid_durations} as we also fixed the minimum voxel size at $\SI{0.1}{\m}$ and increase the number of covered pixels.
+The Figure intuitively explains the near doubling of the render time between 1 covered pixel and 16 covered pixels, since we start \ac{lod} rendering right in front of the camera for 16 covered pixels.
 
 
 % We get another view on the increasing distances of \ac{lod} rendering when we look at the colored bounding boxes of the volumes again ...
-Looking back at Figure \ref{fig:lod_grid}, the influence of the memory footprint of a grid on the render performance becomes especially apparent at a minimum voxel size of 0.1m, where we observe almost a doubling of the render time between our default combination with one covered pixel per voxel and when up to 16 pixels may be covered.
-Overall the best result is achieved by dropping the three finest \acsp{lod} and let each voxel cover up to four pixels.
-The scene then renders in 179s which is a 27\% improvement over rendering only meshes.
-Additionally it has the positive side-effect that the shading problem is less noticeable, which is reflected in a drop in the mean \FLIP error from 0.123 to 0.096.
+Looking back at Figure \ref{fig:lod_grid}, the overall best result is achieved by dropping the three finest \acsp{lod} and let each voxel cover up to four pixels.
+The scene then renders in $\SI{4549}{\s}$ which is a 17\% improvement over rendering only meshes.
+Additionally it has the positive side-effect that the shading problem is less noticeable, which is reflected in a drop in the mean \FLIP error from 0.073 to 0.038.
 Figure \ref{fig:render_and_error_fastest} shows this rendering with the corresponding \FLIP error map.
 \begin{figure}[ht]
     \centering
-    \begin{subfigure}[b]{0.9\linewidth}
-        \centering
-        \includegraphics[width=1\linewidth]{img/results/rendering_lod_4B.jpg}
+    \begin{subfigure}[b]{\linewidth}
+        \resizebox{\textwidth}{!}{%
+            \includegraphics[height=4cm]{img/results/lod_4B_with_boxes.png}%
+            \quad
+            \includegraphics[height=4cm]{img/results/lod_4B_snippet3.png}%
+            \quad
+            \includegraphics[height=4cm]{img/results/lod_4B_snippet1.png}%
+            \quad
+            \includegraphics[height=4cm]{img/results/lod_4B_snippet2.png}%
+        }
         \caption{}
     \end{subfigure}
-    \begin{subfigure}[b]{0.9\linewidth}
-        \centering
-        \includegraphics[width=1\linewidth]{img/results/flip_error_4B.jpg}
+    \begin{subfigure}[b]{\linewidth}
+        \resizebox{\textwidth}{!}{%
+            \includegraphics[height=4cm]{img/results/flip_error_4B_with_boxes.png}%
+            \quad
+            \includegraphics[height=4cm]{img/results/flip_error_4B_snippet3.png}%
+            \quad
+            \includegraphics[height=4cm]{img/results/flip_error_4B_snippet1.png}%
+            \quad
+            \includegraphics[height=4cm]{img/results/flip_error_4B_snippet2.png}%
+        }
         \caption{}
     \end{subfigure}
-    \caption[Rendering and \FLIP error map of the fastest combination]{(a) shows the fastest rendering, finished in 179s for 32 samples. The scene is generated with a minimum voxel size of 0.8m and up to four covered pixels per voxel. (b) shows the corresponding \FLIP error map against the ground truth. The mean \FLIP error is 0.096.}
+    \caption[Rendering and \FLIP error map of the fastest combination]{(a) shows the fastest rendering, finished in $\SI{4548}{\s}$ for 1024 samples. The scene is generated with a minimum voxel size of 0.8m and up to four covered pixels per voxel. (b) shows the corresponding \FLIP error map against the ground truth. The mean \FLIP error is 0.038.}
     \label{fig:render_and_error_fastest}
 \end{figure}
-We can further decrease the mean \FLIP error down to 0.088, for example by choosing a minimum voxel size of 6.4 meters and let each voxel cover one pixel, at the cost of a higher render time.
-The rendering with the lowest \FLIP error is visually indistinguishable from the ground truth rendering.
+We can further decrease the mean \FLIP error down to 0.031, for example by choosing a minimum voxel size of 6.4 meters and let each voxel cover one pixel, at the cost of a higher render time.
 
+\section{Experiments on Single Model Instances}
+\label{sec:experiments_on_single_model_instances}
+Now that we have a good idea of the performance and quality implications of our approach we perform further tests on single instances of some tree models.
+This gives us finer control over which \ac{lod} should be rendered at which distance.
+We use the models \textit{Asterophyllites equisetiformis adult} (Figure \ref{fig:PR04a}) and \textit{Acer rubrum adult} (Figure \ref{fig:EA01a}) for our tests.
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{img/results/PR04a.png}
+        \caption{}
+        \label{fig:PR04a}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{img/results/EA01a.png}
+        \caption{}
+        \label{fig:EA01a}
+    \end{subfigure}
+	\caption[Models for single instance experiments]{We use the model \textit{Asterophyllites equisetiformis adult} (a) and \textit{Acer rubrum adult} (b) for our single instance experiments. Both images show the mesh representations.}
+	\label{fig:single_model_instances}
+\end{figure}
 
-Actually meshes can also render faster than rough \acsp{lod}, when taking the distance into account.
-When we look at \ref{fig:render_time_comparisons}, we see that all \acsp{lod} initially render slower than the mesh representations.
+The first experiment in this context is, that we render a single instance of all mesh and volume representations at different distances.
+We can see the rendertimes of this experiment plotted in Figure \ref{fig:render_time_comparisons}.
 \begin{figure}[ht]
     \centering
     \begin{subfigure}[b]{0.49\linewidth}
@@ -224,9 +266,30 @@ When we look at \ref{fig:render_time_comparisons}, we see that all \acsp{lod} in
 	\caption[Plots of the render times depending on the distance from the camera.]{These plots show the render times depending on the distance from the camera for single instances of the model \textit{Asterophyllites equisetiformis adult} (a) and for \textit{Acer rubrum adult} (b). Meshes render faster than all \acsp{lod} until a certain distance.}
 	\label{fig:render_time_comparisons}
 \end{figure}
-However their render times fall rapidly with the distance until they eventually are below the mesh render time.
-It is interesting to note, that the mesh render time first also declines slightly before it rises steadily.
+Generally we can expect a performance benefit from choosing a \ac{lod} when its render duration falls below the render duration of the mesh representation.
+Looking at the rendertimes for the volumetric \acsp{lod}, we see that they fall rapidly with increasing distance.
+Surprisingly the rendertimes for the mesh representations do not show the same behavior: They only decline in the beginning, but after a certain distance they rise steadily.
 An explanation for this can be that at a certain distance the random sampling of a pixel produces large jumps across the bounding volume hierarchy, which leads to many cache misses.
+
+As a second experiment we want to fix the distance between the camera and the model and measure how the image quality in terms of the \FLIP error and rendertimes change when we choose different \acsp{lod}.
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{img/results/performance_quality_PR04a.png}
+        \caption{}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{img/results/performance_quality_EA01a.png}
+        \caption{}
+    \end{subfigure}
+	\caption[Plots of \FLIP error and rendertimes for different \acsp{lod}]{These plots show the render times and mean \FLIP errors for different \acsp{lod}. (a) again shows the results for a single instance of the \textit{Asterophyllites equisetiformis adult} model and (b) shows the results for \textit{Acer rubrum adult}.}
+	\label{fig:performance_quality}
+\end{figure}
+The plots in Figure \ref{fig:performance_quality} show that \acsp{lod} with larger voxel sizes generally render faster while producing less accurate images compared to the mesh representation.
+An exception for the decline in image quality for rougher \acsp{lod} are the \acsp{lod} with a voxel size of $\SI{0.2}{\m}$ and $\SI{0.4}{\m}$, where the \FLIP error metric reports lower errors.
+Although the authors of \FLIP generally recommend to use the mean error when reporting a single value \cite{flip_rt_gems}, in this case the median certainly is more expressive.
 
 
 

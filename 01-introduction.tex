@@ -19,7 +19,7 @@ First however, we take a look at the research that has been published in our dom
 \section{Related Work}
 \subsection{Representing Dense Materials by Volumes}
 Representing surfaces by volumes is a long standing problem in computer graphics.
-Generally the visual appearance of volumes is determined by the choice of a phase function and the density respectively the extinction \cite{pbr}.
+Generally the visual appearance of volumes is determined by the choice of a phase function and the density of the medium respectively its extinction \cite{pbr}.
 Therefore research mainly focuses on further improving these functions and the extinction behavior.
 
 % The first work that suggested the use of volumes beyond the rendering of dust or smoke
@@ -68,7 +68,7 @@ The theory for \ac{lod} rendering is motivated by the Nyquist-Shannon sampling t
 When keeping the sampling rate constant, we can therefore avoid aliasing by reducing the maximum frequency in the signal.
 
 As mentioned in the introduction, the usual approach to achieve this goal for textures is to use increasingly blurry textures, which is generally called mipmapping \cite{mipmapping}.
-This method generates new \acsp{lod} by recursively averaging the color of four neighboring texels until one texel remains on one or both sides of the texture \cite{mipmapping}.
+This method generates new \acsp{lod} by recursively averaging the color of four neighboring texels until one texel remains on one or both dimensions of the texture \cite{mipmapping}.
 Another approach for texture \acsp{lod} is the \ac{sat}.
 For this method, a new texture is generated where each texel stores the sum of all texel values in the rectangle between the texel position and the lower left corner of the texture image \cite{crow_summed_area_tables}.
 It is now possible to retrieve arbitrary filtered texture values by specifying upper and lower bounds of a rectangle for which the filtered color should be calculated \cite{crow_summed_area_tables}.
@@ -154,7 +154,7 @@ Since \citeauthor{moreton_tessellation} do not require the precision of De Caste
 The authors also present a way to produce continuous \acp{lod} by using fractional tessellation.
 For that the tessellation is no longer uniform \cite{moreton_tessellation}.
 
-An extensive overview of modern hardware tessellation is given in the paper \cite{niessner_tessellation} by \citeauthor{niessner_tessellation} \cite{niessner_tessellation}.
+An extensive overview of modern hardware tessellation is given in a paper by \citeauthor{niessner_tessellation} \cite{niessner_tessellation}.
 The authors show how tessellation integrates into current rendering pipelines as it is performed after the vertex shader and before the geometry shader \cite{niessner_tessellation}.
 The first step is the hull shader which controls the tessellation rate of the parametric surface patch \cite{niessner_tessellation}.
 For quads, four outer and two inner factors can be specified, while for triangles, three outer and one inner factor is available \cite{niessner_tessellation}.

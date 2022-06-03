@@ -95,6 +95,7 @@ $T$ is the transmittance over the distance $t$ (Beer-Lambert law \cite{lambert})
     L_s(\boldsymbol{x}, \omega_o) = \int_{\mathcal{S}^2} f_p(\omega_o, \omega_i)L_i(\boldsymbol{x}, \omega_i)d\omega_i.
 \end{equation}
 $f_p$ is called the \textit{phase function} and will be explained in Section \ref{subsec:phase_function}.
+
 Now that we defined how light propagates in a medium, we can combine the formulation in Equation \ref{eq:radiative_transfer} with the surface formulation from equation \ref{eq:render_equation}.
 We therefore clip the upper integration bound of equation \ref{eq:radiative_transfer} to a distance $z$ and add the attenuated surface term \cite{novak_overview}:
 \begin{equation*}
@@ -106,7 +107,7 @@ The first part on the right side of this equation accounts for the in-scattering
 \subsection{Solving the Beer-Lambert Law in Heterogeneous Media}
 \label{subsec:solving_beer_lambert_law_in_heterogeneous_media}
 As described in section \ref{subsec:theory_of_light_propagation_in_participating_media} effects like scattering and absoption occur when light interacts with the particles of a medium.
-We therefore need a way to sample interactions on which the light than is scattered or absorbed.
+We therefore need a way to sample interactions on which the light then is scattered or absorbed.
 At distance $t$ the Beer-Lambert law from equation \ref{eq:beer_lambert_law} gives us the proportion of light that did not hit a particle $P(X > t) = T(t)$ \cite{novak_overview}.
 Therefore we can compute the fraction of light that hit a particle by \cite{novak_overview}
 \begin{equation*}
@@ -151,7 +152,7 @@ Instead it updates the transmission with $T_{new} = T_{old}(1 - \frac{\mu_t(\bol
 
 Since both algorithms use a global majorant of the extinction, they perform poorly in media where the extinction varies strongly across the medium.
 Therefore we use local majorants as suggested by \citeauthor{brick_grid} \cite{brick_grid}.
-This idea is visualized in Figure \ref{fig:brick_grid_majorants}
+This idea is visualized in Figure \ref{fig:brick_grid_majorants}.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.9\linewidth]{img/brick_grid_majorants.png}

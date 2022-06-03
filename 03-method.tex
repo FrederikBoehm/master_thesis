@@ -20,7 +20,7 @@ This final evaluation step is explained in Chapter \ref{chap:results_and_discuss
 Although our pipeline can be used with arbitrary models, we only use tree models with it.
 In total these are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
 Meshes and textures together occupy 1.2 GB of disk memory.
-Apart from the models itself XfrogPlants also provides information of the sizes the trees grow during their lifespan, which we also need during filtering and scene generation.
+Apart from the models itself, XfrogPlants also provides information of the sizes the trees grow during their lifespan, which we also need during filtering and scene generation.
 
 \section{Mesh filtering}
 \label{sec:mesh_filtering}
@@ -163,7 +163,7 @@ This effect is visualized in Figure \ref{fig:bounding_sizes}.
 	\label{fig:bounding_sizes}
 \end{figure}
 Then we sample a class \textit{Large}, \textit{Medium}, \textit{Small}, which contain tree models in the corresponding sizes.
-We assign trees that grow 20-35 meters to class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
+We assign trees that grow 20-35 meters to the class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
 This allows us to control the age of the forest.
 For example, if we want an old forest we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
 We then choose a tree from this class, sample a position in the circle and check whether it collides with existing models.
@@ -244,7 +244,7 @@ A certain mesh or volume thus has to occupy \ac{gpu} memory just once and for ea
 We do the same for textures, loading only textures that differ in their file path.
 Each material then stores a pointer to the memory location of the texture.
 
-Our surfaces use the lambertian diffuse \cite{lambert} and the Trowbridge-Reitz \cite{trowbridge_reitz} microfacet \ac{brdf}, which is the general form of the GGX \ac{brdf}.
+Our surfaces use the lambertian diffuse \cite{lambert} and the Trowbridge-Reitz microfacet \ac{brdf} \cite{trowbridge_reitz}, which is the general form of the GGX \ac{brdf}.
 As Figure \ref{fig:leaf_gloss} shows, real leafs can have a specular gloss, therefore we incorporate a specular \ac{brdf}.
 \begin{figure}[ht]
     \centering
