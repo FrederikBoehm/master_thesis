@@ -3,13 +3,13 @@
 
 In recent years computer hardware became increasingly powerful, allowing now even real time raytracing with the introduction of the RTX technology by NVIDIA in 2018 \cite{turing_whitepaper}.
 In parallel to the advances in computer hardware the scenes to be rendered also became more and more complex reaching more than 70 GB of geometry data in a single shot in the film Coco \cite{pixarxpu}.
-Besides the scene geometry, Textures in feature films can additonally consume up to a terabyte of memory \cite{arnold}.
+Besides the scene geometry, textures in feature films can additonally consume up to a terabyte of memory \cite{arnold}.
 While high detailed geometry and textures are required for close-up shots they impair performance when rendering them at large distances like in a landscape scene.
-This is because rays have to be intersected with all triangles in an AABB regardless of the distance to the camera.
+This is because rays have to be intersected with all triangles in an \ac{aabb} regardless of the distance to the camera.
 Additionally having high detailed geometry and textures at distance is prone to aliasing due to undersampling \cite{pbr}.
-Tracing more rays per pixel combats this problem but is usually not feasible, since it increases the render time and has to be done every frame.
+Tracing more rays per pixel combats this problem but is usually not feasible, since it increases the render time and has to be done for every frame.
 Alternatively we can use meshes with fewer triangles and textures that have less details.
-Since the aliasing effect increases with distance we generate multiple \textit{levels of detail} (\acsp{lod}) and render them at a corresponding distance.
+Since the aliasing effect increases with distance from the camera we generate multiple \textit{levels of detail} (\acsp{lod}) and render them at a corresponding distance.
 In this thesis we want to explore another approach for \acl{lod} rendering which combines the information of surface meshes and textures into a single representation using volumes.
 
 We introduce fundamental concepts to this thesis in Chapter \ref{chap:fundamentals} and explain our method in Chapter \ref{chap:method}.
@@ -81,7 +81,10 @@ For generating \acsp{lod} of surface meshes there are a number of strategies whi
 \subsubsection*{Simplification}
 Mesh simplification techniques have in common that they remove geometry from an existing high detailed mesh while trying to preserve the visual appearcance \cite{realtime}.
 This approach is followed in a paper by \citeauthor{hoppe_simplification} \cite{hoppe_simplification}.
-They formulate the problem as the minimization of an energy function $E = E_{dist} + E_{rep} + E_{spring}$, where $E_{dist}$ measures the total squared distance of the mesh's points and $E_{rep}$ penalizes the number of vertices \cite{hoppe_simplification}.
+They formulate the problem as the minimization of an energy function 
+\begin{equation*}
+    E = E_{dist} + E_{rep} + E_{spring},
+\end{equation*} where $E_{dist}$ measures the total squared distance of the mesh's points and $E_{rep}$ penalizes the number of vertices \cite{hoppe_simplification}.
 $E_{spring}$ is a regularization term, which acts as if the edges between vertices were replaced by springs \cite{hoppe_simplification}.
 Their algorithm randomly attempts to remove edges from the mesh and marks the change as preliminary if $E_{new} < E_{old}$ \cite{hoppe_simplification}.
 In a second step one of the vertices in the neighborhood to this preliminary change is moved in order to minimize $E_{dist}$ and $E_{spring}$ while omitting self-intersections of the mesh \cite{hoppe_simplification}.

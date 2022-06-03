@@ -110,8 +110,8 @@ The specular component gives discrete specular highlights on the surfaces while 
 So obviously our approach fails in preserving the visual appearance of the meshes.
 We identify two reasons for this limitation: First, the \ac{sggx} phase function is defined on the whole unit sphere (recall Figure \ref{fig:sggx_ndf}), which means that half of the rays are reflected into the medium where they are attenuated, while for surfaces all rays are reflected away from the surface.
 Second, it is likely that this error is due to the usage of an isotropic microflake projected area, which directly influences our density values.
-As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density.
-Rising roughness values therefore lead to decreasing density values, since $P_{occ}$ from Equation \ref{eq:our_filtering_equation} decreases.
+As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$.
+Rising roughness values lead to decreasing density values, since $P_{occ}$ from Equation \ref{eq:our_filtering_equation} decreases.
 This can lead to a significantly different look because the rays scatter earlier.
 The filtering procedure however, would become more complex.
 Experiments in this direction are outside of the scope of this thesis.

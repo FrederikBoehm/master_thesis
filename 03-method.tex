@@ -111,8 +111,9 @@ For every \ac{lod} we also export metadata which encompasses the number of voxel
 We generate 7 \acsp{lod} for voxel sizes from 0.1m to 6.4m, doubling the size of a voxel for each \ac{lod}.
 The number of voxels is then computed from the voxel size and the size of the trees.
 The reason for choosing a voxel size between 0.1m and 6.4m is because for finer voxels the grids quickly use more memory than their surface representations while choosing even larger sizes has no effect, since some trees are already represented by a single voxel on the coarsest level.
-The resulting grids occupy 940MB of disk space, where the finest \acsp{lod} are responsible for 65\% of this data.
-In chapter \ref{chap:results_and_discussion} we discuss how dropping this \ac{lod} affects image quality and rendering times.
+We cast 100 rays in each voxel to estimate the occlusion probability and optimize the density $\rho$ in 20 iterations.
+On average it takes $\SI{0.14}{\s}$ to filter a model and the resulting grids occupy 940MB of disk space, where the finest \acsp{lod} are responsible for 65\% of this data.
+In Chapter \ref{chap:results_and_discussion} we discuss how dropping this \ac{lod} affects image quality and rendering times.
 
 Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the surface representation for some models.
 \begin{figure}[ht]
