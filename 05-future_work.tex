@@ -18,4 +18,4 @@ Also using brick grid for storing all voxel attributes like color values or the 
 
 Having the knowledge that rough \acsp{lod} do not necessarily render faster than meshes, a further optimization would be to not simply set models outside of the view frustum to the roughest \ac{lod}.
 Instead it might be beneficial to also incorporate the distance to the camera for these and use the mesh representations first and switch to the roughest \ac{lod} only after a certain distance.
-Furthermore we might want to use a different heuristic of \ac{lod} selection for each model, since we learned from Figure \ref{fig:render_time_comparisons} that \ac{lod} rendering surpasses mesh rendering at different distances for different models.
+Furthermore, we might want to use a different heuristic of \ac{lod} selection for each model, since we learned from Figure \ref{fig:render_time_comparisons} that \ac{lod} rendering surpasses mesh rendering at different distances for different models.

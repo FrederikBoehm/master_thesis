@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 
-def get_data_PR04a():
+def get_data_EU06a():
     lod_size = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4]
     # lod_size = [0, 1, 2, 3, 4, 5, 6]
     data = {
-        "FLIP": [0.025766,	0.022173,	0.030333,	0.038439,	0.04428,	0.058313,	0.061157],
-        "Time": [171.676, 127.218, 106.393, 92.6528, 86.7085, 66.18, 41.8291]
+        "FLIP": [0.120613,	0.132097,	0.143788,	0.166911,	0.187352,	0.21868,	0.267729],
+        "Time": [805.019, 522.369, 376.157, 304.377, 217.929, 200.664, 178.852]
     }
 
     return (lod_size, data)
@@ -14,7 +14,7 @@ def get_data_EA01a():
     lod_size = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4]
     # lod_size = [0, 1, 2, 3, 4, 5, 6]
     data = {
-        "FLIP": [0.066111,	0.064404,	0.059674,	0.068491,	0.078282,	0.086487,	0.115491],
+        "FLIP": [0.169702,	0.177271,	0.187487,	0.208363,	0.237443,	0.280424,	0.33784],
         "Time": [685.453, 452.881, 335.395, 279.225, 216.635, 205.047, 194.437]
     }
 
@@ -43,5 +43,5 @@ def create_plot(data, out_path):
 
 
 if __name__ == "__main__":
-    create_plot(get_data_PR04a(), "../img/results/performance_quality_PR04a.png")
+    create_plot(get_data_EU06a(), "../img/results/performance_quality_EU06a.png")
     create_plot(get_data_EA01a(), "../img/results/performance_quality_EA01a.png")
