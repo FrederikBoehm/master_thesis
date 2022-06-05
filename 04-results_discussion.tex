@@ -112,8 +112,7 @@ So our approach fails in preserving the visual appearance of the meshes.
 We identify two reasons for this limitation: First, the \ac{sggx} phase function is defined on the whole unit sphere (recall Figure \ref{fig:sggx_ndf}), which means that half of the rays are reflected into the medium where they are attenuated, while for surfaces all rays are reflected away from the surface.
 Second, it is likely that this error occured due to the usage of an isotropic microflake projected area, which directly influences our density values.
 As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$.
-Rising roughness values lead to decreasing density values, since $P_{occ}$ from Equation \ref{eq:our_filtering_equation} decreases.
-This can lead to a significantly different look, because the rays scatter earlier.
+Using an anisotropic projected area therefore can lead to a significantly different look.
 The filtering procedure however, would become more complex.
 Experiments in this direction are outside of the scope of this thesis.
 
@@ -123,7 +122,7 @@ Experiments in this direction are outside of the scope of this thesis.
 % Therefore we could reduce the error by using an anisotropic extinction, which would lead to a more complex filtering procedure.
 
 Apart from these visual problems, the render time for the \ac{lod} approach is another concern.
-The duration is currently with $\SI{8723}{\s}$ for 1024 samples per pixel (Figure \ref{fig:render_comparison_lod}) slower than rendering only the meshes, which took $\SI{5463}{\s}$ for 1024 samples per pixel (Figure \ref{fig:render_comparison_mesh}).
+The duration with $\SI{8723}{\s}$ for 1024 samples per pixel (Figure \ref{fig:render_comparison_lod}) is currently slower than rendering only the meshes, which took $\SI{5463}{\s}$ for 1024 samples per pixel (Figure \ref{fig:render_comparison_mesh}).
 As we just discussed, we recognize the \acsp{lod} mainly by their different color and not by their details or blurriness.
 We therefore have some room left for tweaking the distance at which we switch to \ac{lod} rendering or we can use coarser \acsp{lod}.
 Tweaking the distance translates to changing the number of pixels a voxel may cover.
@@ -148,7 +147,7 @@ In Figure \ref{fig:lod_grid} we visualize the durations as well as the \FLIP err
         \includegraphics[width=1\linewidth]{img/results/flip_errors.png}
         \caption{}
     \end{subfigure}
-	\caption[Heatmap of the \ac{lod} render durations and \FLIP errors.]{Heatmap for render durations (a) and the mean \FLIP error (b) of different combinations of the minimum voxel size and the number of covered pixels. Bright regions indicate high values, dark regions indicate low values.}
+	\caption[Heatmap of the \ac{lod} render durations and \FLIP errors]{Heatmap for render durations (a) and the mean \FLIP error (b) of different combinations of the minimum voxel size and the number of covered pixels. Bright regions indicate high values, dark regions indicate low values.}
 	\label{fig:lod_grid}
 \end{figure}
 We can see that when we start \ac{lod} rendering with rougher \acsp{lod} we can reduce rendertimes to a certain degree before they rise again.
@@ -158,13 +157,14 @@ The meshes take longer to render than the rough \acsp{lod}, therefore the render
 
 We get another view on the different combinations between the number of covered pixels and the minimum voxel size if we visualize the bounding boxes, like we previously did in Figure \ref{fig:visualize_lods}.
 Now we not only show a rendering from above the scene but also from the main camera perspective.
-Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} visualizes the previously described effect, that increasing the minimum voxel size with a fixed number of covered pixels increases the distance at which \acsp{lod} are rendered.
+Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} visualizes the previously described effect, that the distance at which \acsp{lod} are rendered increases, when the minimum voxel size is increased.
 \begin{figure}
     \begin{subfigure}[b]{\linewidth}
         \begin{center}
+            \setlength{\tabcolsep}{2pt}
             \begin{tabular}{ c c c c  }
-                \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1A_front.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1B_front.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1C_front.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1D_front.jpg} \\
-                \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1A_top.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1B_top.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1C_top.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1D_top.jpg} \\
+                \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1A_front.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1B_front.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1C_front.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1D_front.jpg} \\
+                \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1A_top.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1B_top.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1C_top.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1D_top.jpg} \\
                 {\footnotesize Covered pixels = 1} & {\footnotesize Covered pixels = 4} & {\footnotesize Covered pixels = 9} & {\footnotesize Covered pixels = 16} \\
             \end{tabular}
         \end{center}
@@ -173,9 +173,10 @@ Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} vi
     \end{subfigure}
     \begin{subfigure}[b]{\linewidth}
         \begin{center}
+            \setlength{\tabcolsep}{2pt}
             \begin{tabular}{ c c c c  }
-                \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1A_front.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_2A_front.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_3A_front.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_4A_front.jpg} \\
-                \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_1A_top.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_2A_top.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_3A_top.jpg} & \adjustimage{width=0.22\textwidth,valign=m}{img/results/visualize_lods_4A_top.jpg} \\
+                \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1A_front.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_2A_front.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_3A_front.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_4A_front.jpg} \\
+                \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_1A_top.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_2A_top.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_3A_top.jpg} & \adjustimage{width=0.24\textwidth,valign=m}{img/results/visualize_lods_4A_top.jpg} \\
                 % Covered pixels = 1 & Covered pixels = 4 & Covered pixels = 9 & Covered pixels = 16 \\
                 {\footnotesize Min. voxel size = $\SI{0.1}{\m}$} & {\footnotesize Min. voxel size = $\SI{0.2}{\m}$} & {\footnotesize Min. voxel size = $\SI{0.4}{\m}$} & {\footnotesize Min.\newline voxel size = $\SI{0.8}{\m}$}\\
             \end{tabular}
@@ -264,11 +265,12 @@ We can see the rendertimes of this experiment plotted in Figure \ref{fig:render_
         \includegraphics[width=1\linewidth]{img/results/render_durations_EA01a.png}
         \caption{}
     \end{subfigure}
-	\caption[Plots of the render times depending on the distance from the camera.]{These plots show the render times depending on the distance from the camera for single instances of the model \textit{Celtis australis adult} (a) and for \textit{Acer rubrum adult} (b). Meshes render faster than all \acsp{lod} until a certain distance.}
+	\caption[Plots of the render times depending on the distance from the camera]{These plots show the render times depending on the distance from the camera for single instances of the model \textit{Celtis australis adult} (a) and for \textit{Acer rubrum adult} (b). Meshes render faster than all \acsp{lod} until a certain distance.}
 	\label{fig:render_time_comparisons}
 \end{figure}
 Interestingly, the meshes first render faster than all \acsp{lod}.
 With increasing distance the rendertimes of the volumetric representations then decrease rapidly and eventually fall below the rendertime of the mesh representation.
+For the model \textit{Celtis australis adult} this is the case after $\SI{800}{\m}$ and for the model \textit{Acer rubrum adult} a \ac{lod} renders faster after $\SI{700}{\m}$.
 Surprisingly, the rendertimes for the mesh representations only decline in the beginning, but after a certain distance they rise steadily.
 An explanation for this could be that at a certain distance the random sampling of a pixel produces large jumps across the bounding volume hierarchy, which leads to many cache misses.
 

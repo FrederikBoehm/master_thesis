@@ -57,7 +57,7 @@ maxcitenames=1
 \usepackage{multicol}
 \usepackage{svg}
 \usepackage{tabularx}
-\usepackage{adjustbox}
+\usepackage[export]{adjustbox}
 \usepackage{mathtools}
 \usepackage{xspace}
 
@@ -80,6 +80,11 @@ maxcitenames=1
 \DeclareUnicodeCharacter{02B9}{'}
 
 \newcolumntype{Y}{>{\centering\arraybackslash}X}
+% \renewcommand\tabularxcolumn[1]{>{\Centering}m{#1}}
+\renewcommand\tabularxcolumn[1]{m{#1}}
+
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
 
 % danke, daniel:
 \lstdefinelanguage{CUDA}{morekeywords={

@@ -1,7 +1,7 @@
 \chapter{Introduction}
 \label{chap:intro}
 
-In recent years computer hardware became increasingly powerful, allowing now even real time raytracing with the introduction of the RTX technology by NVIDIA in 2018 \cite{turing_whitepaper}.
+In recent years computer hardware became increasingly powerful, allowing now even real time ray tracing with the introduction of the RTX technology by NVIDIA in 2018 \cite{turing_whitepaper}.
 In parallel to the advances in computer hardware the scenes to be rendered also became more and more complex reaching more than 70 GB of geometry data in a single shot in the film Coco \cite{pixarxpu}.
 Besides the scene geometry, textures in feature films can additionally consume up to a terabyte of memory \cite{arnold}.
 While high detailed geometry and textures are required for close-up shots they impair performance when rendering them at large distances like in a landscape scene.
@@ -18,11 +18,11 @@ First however, we look at the research that has been published in our domain in 
 
 \section{Related Work}
 \subsection{Representing Dense Materials by Volumes}
-Representing surfaces by volumes is a long-standing problem in computer graphics.
 Generally, the visual appearance of volumes is determined by the choice of a phase function and the density of the medium respectively its extinction \cite{pbr}.
 Therefore, research mainly focuses on further improving these functions and the extinction behavior.
 
 % The first work that suggested the use of volumes beyond the rendering of dust or smoke
+Representing surfaces by volumes is a long-standing problem in computer graphics.
 An early work by \citeauthor{kajiya_rendering_fur_with_textures} uses three dimensional textures of density values to render fur \cite{kajiya_rendering_fur_with_textures}.
 The authors store the particle density, a coordinate frame as well as parameters for diffuse and specular reflection functions in each texel \cite{kajiya_rendering_fur_with_textures}.
 The density is obtained from a particle system which models the flow of a hair using the particle's trajectory \cite{kajiya_rendering_fur_with_textures}.
@@ -30,22 +30,24 @@ The density is obtained from a particle system which models the flow of a hair u
 % For specular reflection the authors
 
 In a paper by \citeauthor{meng_multi_scale_modeling_and_rendering_of_granular_materials} volumetric representations of grains are used for efficient path tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-For modeling the light scattering in the volume the authors use a tabulated phase function that is measured from simulating the light scattering of a single grain using ray-tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+For modeling the light scattering in the volume the authors use a tabulated phase function.
+This phase function is measured from simulating the light scattering of a single grain using ray-tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 The extinction coefficient is computed from the simulation results as well since the authors also track the mean free-flight distance between successive interactions with grain \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-The authors observe a speedup of 2.1-30$\times$ compared to the surface representation \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
-This is because next event estimation is not possible for grain that does not lie on the surface \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+Compared to the surface representation, the authors observe a speedup of 2.1-30$\times$ depending on the test scene \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+The authors argue that this speedup occurs because the surface representations cannot employ next event estimation if a grain is occluded by other grains \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+Therefore, paths have to be traced explicitly through the geometry if a grain does not lie on the surface \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 
 Many recent contributions use the microflake model introduced by \citeauthor{microflake}, which models a volume by two-sided, randomly oriented flakes and therefore allows anisotropic media \cite{microflake}.
 \citeauthor{zhao_building_volumetric_appearance_models} use this model to render fabric \cite{zhao_building_volumetric_appearance_models}.
 The authors work with real fabric and scan it using computer tomography to obtain the density values for each voxel \cite{zhao_building_volumetric_appearance_models}.
 To compute the orientation of the microflakes in each voxel, the authors fit cylinders to the scanned density field \cite{zhao_building_volumetric_appearance_models}.
-For estimating the color and reflection properties the authors repeatedly render the volume and adjust the properties until the image matches a photograph of the fabric \cite{zhao_building_volumetric_appearance_models}.
+For estimating the color and reflection properties, the authors repeatedly render the volume and adjust the properties until the image matches a photograph of the fabric \cite{zhao_building_volumetric_appearance_models}.
 
 \citeauthor{sggx} contributed another paper that uses the microflake framework \cite{sggx}.
 The authors develop a new phase function which resembles the reflection properties of the GGX \ac{brdf} in volumes \cite{sggx}.
 It can be used to substitute existing fiber-like scattering functions as well as surface-like scattering functions \cite{sggx}.
 This property makes it interesting for our thesis, since we want to represent surface meshes by volumes.
-We therefore explain the theoretical background extensively in section \ref{subsec:phase_function}.
+Therefore, we explain the theoretical background extensively in section \ref{subsec:phase_function}.
 
 \subsection{Efficient Volume Rendering}
 Although this thesis does not provide contributions to the optimization of volume rendering itself, using optimizations is key for competing with hardware accelerated ray tracing.
@@ -54,7 +56,7 @@ In its basic form this is a global majorant over the entire volume, however for 
 
 To obtain local density majorants for delta tracking, \citeauthor{yue_space_partitioning} compare different space partitioning techniques regarding their performance implications \cite{yue_space_partitioning}.
 These encompass a uniform grid partitioning, kd-trees and octrees \cite{yue_space_partitioning}.
-The authors evaluate their schemes on $8\times8\times8$ density grids and observe the highest speed-up compared to a global density majorant for the kd-tree with up to ${50\times}$ \cite{yue_space_partitioning}.
+The authors evaluate their schemes on $8 \times 8 \times 8$ density grids and observe the highest speed-up compared to a global density majorant for the kd-tree with up to ${50\times}$ \cite{yue_space_partitioning}.
 A drawback is the high construction time of more than $\SI{1.5}{\s}$ which is two orders of magnitudes slower than the octree and three orders of magnitudes slower than the uniform partitioning \cite{yue_space_partitioning}.
 
 \citeauthor{brick_grid} use local density majorants for their distance sampling and transmittance estimation \cite{brick_grid}.
@@ -103,7 +105,7 @@ Subdivision algorithms can also be seen as an instance of \ac{lod} approaches, s
 \citeauthor{CATMULL1978350} introduced an algorithm that is now widely known as Catmull-Clark subdivision \cite{CATMULL1978350}.
 The algorithm is not limited to triangle meshes but can be used with arbitrary polygons.
 In the first step, a new \textit{face point} is computed by calculating the average position of the vertices defining the face \cite{CATMULL1978350}.
-Secondly, for every edge the authors compute the average position of the midpoint of this edge with the two adjacent points generated in step one \cite{CATMULL1978350}.
+Secondly, for every edge the authors compute the average position of the midpoint of this edge with the two adjacent face points generated in step one \cite{CATMULL1978350}.
 This gives new \textit{edge points} \cite{CATMULL1978350}.
 Finally new \textit{vertex points} are generated by computing:
 \begin{equation*}
@@ -119,7 +121,7 @@ Figure \ref{fig:catmull_clark_subdivision} shows the subdivision of a cube after
     \centering
     \includegraphics[width=0.5\linewidth]{img/catmull_clark_subdivision.png}
     % \caption[Points generated by the Catmull-Clark subdivision]{Points generated after the first three steps of the Catmull-Clark subdivision. Blue: Face points, generated in the first step. Pink: Edge points, generated in second step. Green: Vertex points, generated in third step. (Image from \cite{catmull_clark_step_3}).}
-    \caption[First iteration of the Catmull-Clark subdivision]{First iteration of the Catmull-Clark subdivision on a cube mesh. The colors show in which step the point was generated. Red: Face points, generated in the first step. Blue: Edge points, generated in second step. Black: Vertex points, generated in third step (Image from \cite{cheng_catmull_clark_visualization}).}
+    \caption[First iteration of the Catmull-Clark subdivision]{First iteration of the Catmull-Clark subdivision on a cube mesh. The colors show in which step the point was generated. Red: Face points, generated in the first step. Blue: Edge points, generated in second step. Black: Vertex points, generated in the third step (Image from \cite{cheng_catmull_clark_visualization}).}
     \label{fig:catmull_clark_subdivision}
 \end{figure}
 
@@ -169,7 +171,7 @@ It computes vertex attributes based on the tessellation factor, control points a
 The authors also present various evaluation procedures for tensor product surfaces \cite{niessner_tessellation}.
 
 \subsubsection*{Voxel-Based}
-Voxel based \ac{lod} approaches are special since they can not only encode the geometry of a model but also their texture.
+Voxel-based \ac{lod} approaches are special since they can not only encode the geometry of a model but also their texture.
 
 \citeauthor{afra_voxel_lods} applies surface voxelization to large meshes with hundreds of millions of triangles \cite{afra_voxel_lods}.
 The authors start by subdividing the geometry to build a kd-tree until each node in the tree contains no more than one triangle \cite{afra_voxel_lods}.
@@ -177,7 +179,8 @@ Starting from the root, voxelization is then performed on every third level for 
 Their voxelization procedure is based on rasterization, where the triangles within a voxel are projected to all six sides of the voxel \cite{afra_voxel_lods}.
 The authors then average normals and colors and store this average if the maximum absolute difference between the samples and the average is below a threshold \cite{afra_voxel_lods}.
 If that is not the case, all six samples are stored \cite{afra_voxel_lods}.
-\citeauthor{afra_voxel_lods} render the scene using ray tracing against the kd-tree \cite{afra_voxel_lods}.
+The resulting kd-tree represents inner nodes using voxels and the leafs are represented by single triangles \cite{afra_voxel_lods}.
+\citeauthor{afra_voxel_lods} then renders the scene using ray tracing against the kd-tree \cite{afra_voxel_lods}.
 The tree is traversed and for every voxel node, the screen space area of that node respectively the voxel is computed to determine whether to continue traversal \cite{afra_voxel_lods}.
 
 Compared to \citeauthor{afra_voxel_lods}, \citeauthor{hybrid_mesh_volume_lods} propose a method for generating physically plausible density values for each voxel.

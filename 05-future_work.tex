@@ -6,7 +6,8 @@ The existing volumes would not be compatible with this new approach and had to b
 
 To further enhance the quality of the renderings, it would be interesting how our volumetric \ac{lod} approach performs with spectral rendering.
 This would improve physical accuracy since the scattering in media is actually wavelength dependent \cite{novak_overview} but it requires a rewrite of the renderer.
-Since this increases the dimension of the rendering equation it leads to an increase in the render duration and is currently only feasible for offline rendering, though we should still see a performance improvement.
+Since this increases the dimension of the rendering equation it leads to an increase in the render duration and is currently only feasible for offline rendering.
+A performance improvement should still be the result.
 
 Another interesting area of research would be to further improve the performance of our approach and possibly switch the \acsp{lod} on the fly.
 This would allow a camera movement without making the \acsp{lod} misalign the current view frustum.
@@ -17,5 +18,6 @@ A more portable optimization would be to approximate the pixels a bounding box c
 Also using brick grid for storing all voxel attributes like color values or the \ac{sggx} matrix $S$ might be worth investigating regarding the performance implications.
 
 Having the knowledge that rough \acsp{lod} do not necessarily render faster than meshes, a further optimization would be to not simply set models outside of the view frustum to the roughest \ac{lod}.
-Instead it might be beneficial to also incorporate the distance to the camera for these and use the mesh representations first and switch to the roughest \ac{lod} only after a certain distance.
+Instead it might be beneficial to also incorporate the distance to the camera for these and use the mesh representations first.
+Only after a certain distance from the camera the roughest \ac{lod} would be selected.
 Furthermore, we might want to use a different heuristic of \ac{lod} selection for each model, since we learned from Figure \ref{fig:render_time_comparisons} that \ac{lod} rendering surpasses mesh rendering at different distances for different models.

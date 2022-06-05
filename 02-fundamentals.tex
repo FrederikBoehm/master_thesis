@@ -15,6 +15,8 @@ We use these notations throughout the thesis:
         Bold letters ($\boldsymbol{x}$, $\boldsymbol{y}$, ...) & Points in space \\
         % \hline
         $n_{\boldsymbol{x}}$ & The normal at point $\boldsymbol{x}$ \\
+        $\mathcal{H}^2$ & Hemispherical integration domain \\
+        $\mathcal{S}^2$ & Spherical integration domain \\
         % \hline
     \end{tabular}
 \end{center}
@@ -24,24 +26,24 @@ We aim to implement a physically based renderer in order to validate the results
 The key property of physically based approaches is the conservation of energy which is given by the rendering equation \cite{rendering_equation}:
 \begin{equation}
     \label{eq:render_equation}
-    L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \int_{\mathcal{H}^2} f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_x \cdot w_i| d\omega_i.
+    L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \int_{\mathcal{H}^2} f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_{\boldsymbol{x}} \cdot w_i| d\omega_i.
 \end{equation}
-It states that the radiance at a point $\boldsymbol{x}$ in direction $\omega_o$ is given by the emitted radiance at this point plus the integral over the hemisphere $\mathcal{H}^2$ of the \ac{brdf} $f$ times the emitted radiance $L$ of a light source at point $\boldsymbol{y}$ in direction $\omega_i$ times the absolute value of the dot product between the normal $n_\textbf{x}$ and the incident direction $\omega_i$.
-Since this equation is generally not analytically solvable, we can use Monte Carlo integration to solve it numerically.
+It states that the radiance at a point $\boldsymbol{x}$ in direction $\omega_o$ is given by the emitted radiance at this point plus the integral over the hemisphere $\mathcal{H}^2$ of the \ac{brdf} $f$ times the emitted radiance $L$ of a light source at point $\boldsymbol{y}$ in direction $\omega_i$ times the absolute value of the dot product between the normal $n_{\boldsymbol{x}}$ and the incident direction $\omega_i$.
+Since this equation is generally not analytically solvable, we use Monte Carlo integration to solve it numerically.
 For that we have to replace the integral by a sum and divide each summand by the number of summands and by the probability of creating a sample $i$ \cite{pbr}:
 \begin{equation*}
-    L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \frac{1}{N}\sum_{i=1}^{N} \frac{f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_x \cdot w_i|}{p(\omega_i)}.
+    L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \frac{1}{N}\sum_{i=1}^{N} \frac{f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_{\boldsymbol{x}} \cdot w_i|}{p(\omega_i)}.
 \end{equation*}
 The recursive nature of this equation can be observed immediately as we could substitute the radiance $L$ in the sum by the whole equation.
 However, implementing an algorithm in this way is infeasible since that would lead to an exponential growth in the compute time and memory consumption with the recursion depth.
 As a solution to this problem \citeauthor{rendering_equation} proposed the \textit{path tracing} algorithm \cite{rendering_equation}.
 Instead of sampling $N$ new directions at each point of intersecting the geometry, we sample a single direction at each intersection point starting at the camera until we hit a light source \cite{rendering_equation}.
-Conceptually the recursive approach spans up a ray tree.
+Conceptually the recursive approach spans up a ray tree \cite{rendering_equation}.
 In this tree the root represents the camera, a new level is added at each point of reflection and the leafs are light hits \cite{rendering_equation}.
 Path tracing then only samples one path from the root to a light source in this tree \cite{rendering_equation}.
 Sampling only one path leads to a high variance, but when we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
 Additionally, there are methods to reduce the variance of a path like importance sampling or next event estimation.
-In short, importance sampling reduces variance by sampling from a distribution that has a similar shape like the integrand of Equation \ref{eq:render_equation}.
+In short, importance sampling reduces variance by sampling from a distribution that has a similar shape like the integrand of Equation \ref{eq:render_equation} \cite{rendering_equation}.
 Next event estimation, on the other hand, computes the direct illumination from a light source at each path vertex \cite{pbr}.
 \citeauthor{pbr} provide detailed explanations of these techniques \cite{pbr}.
 
@@ -49,7 +51,7 @@ Next event estimation, on the other hand, computes the direct illumination from 
 Since we want to represent our \acsp{lod} by volumes, the following chapter introduces how path tracing can be extended to volumes.
 Volumes are three dimensional regions of space that are not vacuum and therefore have a density ${\rho > \SI{0}{\frac{1}{\m^3}}}$ \cite{pbr}.
 Thus, $\rho$ gives us the number of particles in a unit volume \cite{novak_overview}.
-We can store the density values at discrete positions, which are called \textit{voxels} \cite{pbr}.
+We store the density values at discrete positions, which are called \textit{voxels} \cite{pbr}.
 These voxels can then be arranged in three dimensional grids \cite{pbr}.
 Although it is conceptually helpful to think of volumes as these \textit{dense grids} it leads to inefficient memory representations, since vacuum regions still must be stored.
 For example, if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx \SI{48}{\%}$ of the voxels will store a density of zero.
@@ -128,7 +130,7 @@ After rearranging, this gives us a method to sample free path distances in homog
 \end{equation}
 where $\xi$ is a uniform random number in the interval $[0, 1)$ \cite{novak_overview}.
 
-However, heterogeneous media distance sampling is more complex, since $\mu_t$ is no longer constant.
+However, distance sampling in heterogeneous media is more complex, since $\mu_t$ is no longer constant.
 We could interpret each voxel as a homogeneous medium and sample a target transmittance in the interval $(0, 1]$ \cite{novak_overview}.
 We then have to accumulate the transmittance over all voxels that a ray passes until it falls below the target transmittance \cite{novak_overview}.
 This method is called \textit{regular tracking} \cite{sutton_regular_tracking}.
@@ -148,7 +150,7 @@ We first have to homogenize the medium by adding fictious matter until the extin
 This fictious matter does not influence the scattering or absorption behavior \cite{novak_overview}.
 We can then iteratively sample new distances using Equation \ref{eq:distance_sampling} with $\mu_t=\bar{\mu_t}$ and compare the local extinction coefficient $\mu_t(\boldsymbol{x})$ with the majorant $\bar{\mu_t}$ using a uniform random number $\xi\in[0,1)$ \cite{spectral_and_decomposition_tracking}.
 If $\xi<\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a hit with a particle and can exit the iteration, if $\xi>=\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a null-collision meaning that we have to continue with sampling a new distance $t$ \cite{spectral_and_decomposition_tracking}.
-Note that for a constant cross-sectional area $\sigma_t$ we can use the ratio between the local density $\rho(\boldsymbol{x})$ and the density majorant $\bar{\rho}$ instead.
+Note, that for a constant cross-sectional area $\sigma_t$ we can use the ratio between the local density $\rho(\boldsymbol{x})$ and the density majorant $\bar{\rho}$ instead.
 To estimate the transmittance in a heterogeneous medium we employ a similar algorithm called \textit{ratio tracking} \cite{novak_ratio_tracking}.
 As opposed to delta tracking, ratio tracking does not compare whether the interaction is a null-collision \cite{novak_ratio_tracking}.
 Instead, it updates the transmission with $T_{new} = T_{old}(1 - \frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}})$ \cite{novak_ratio_tracking}.
@@ -223,13 +225,13 @@ The \ac{ndf} $D(\omega_m)$ can be seen as the extension of the GGX \acs{ndf} to 
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{img/sggx_ndf_a.jpg}
-        \caption{GGX $D(\omega_m), \omega_m \in \Omega^+$}
+        \caption{GGX $D(\omega_m), \omega_m \in \mathcal{H}^2$}
         \label{fig:sggx_ndf_a}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
         \includegraphics[width=1\linewidth]{img/sggx_ndf_b.jpg}
-        \caption{SGGX $D(\omega_m), \omega_m \in \Omega$}
+        \caption{SGGX $D(\omega_m), \omega_m \in \mathcal{S}^2$}
         \label{fig:sggx_ndf_b}
     \end{subfigure}
 	\caption[Visualization of anisotropic \acsp{ndf}]{Visualization of anisotropic \acsp{ndf}. Note that the negative hemisphere of the SGGX \acs{ndf} is a mirroring of the positive hemisphere (Image from \cite{sggx}).}
@@ -247,7 +249,7 @@ As depicted in Figure \ref{fig:sggx_projected_area}, this is the area of the mic
 For the SGGX phase function the projected area is defined as \cite{sggx}:
 \begin{equation}
     \label{eq:projected_area}
-    \sigma(\omega_o)=\int_\Omega \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m = \sqrt{\omega_o^T S \omega_o},
+    \sigma(\omega_o)=\int_{\mathcal{S}^2} \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m = \sqrt{\omega_o^T S \omega_o},
 \end{equation}
 where $\langle -,-\rangle$ denotes the clamped dot product \cite{sggx}.
 Having defined these terms the authors introduce the actual phase function which consists of a specular and a diffuse component.
@@ -258,7 +260,7 @@ The specular component is evaluated as \cite{sggx}:
 Importance sampling the specular component requires to sample a microflake normal $\omega_m$ from $D_{\omega_o}$ and the direction $\omega_o$ is reflected on this normal to generate an incident direction $\omega_i$ \cite{sggx}.
 For evaluating the diffuse phase function the authors propose to sample a normal $\omega_m$ from $D_{w_o}$ which gives an unbiased estimate of the following integral \cite{sggx}:
 \begin{equation*}
-    f{}^{diff}_p(\omega_o, \omega_i) = \frac{1}{\pi}\int_\Omega \langle\omega_i,\omega_m\rangle D_{\omega_o}(\omega_m) d\omega_m = \lim \limits_{N \to +\infty} \frac{1}{N} \sum_{n=1}^N \frac{1}{\pi} \langle\omega_i,\omega_m(n)\rangle.
+    f{}^{diff}_p(\omega_o, \omega_i) = \frac{1}{\pi}\int_{\mathcal{S}^2} \langle\omega_i,\omega_m\rangle D_{\omega_o}(\omega_m) d\omega_m = \lim \limits_{N \to +\infty} \frac{1}{N} \sum_{n=1}^N \frac{1}{\pi} \langle\omega_i,\omega_m(n)\rangle.
 \end{equation*}
 $f{}^{diff}_p$ can then be importance sampled by generating a direction $\omega_m$ from $D_{\omega_o}$ and then sampling the hemisphere given by $\omega_m$ \cite{sggx}.
 
@@ -270,9 +272,10 @@ We refer to this process as filtering.
 We follow a similar approach as \citeauthor{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
 Our deviations from their approach are discussed in Section \ref{sec:mesh_filtering}.
 To sample ray origins the authors use a \ac{pdf} $D_i=D_i^{cube} \ast D^{smooth}$ around the voxel center \cite{hybrid_mesh_volume_lods}.
-$D_i^{cube}$ is a cubic uniform \ac{pdf} around the voxel center and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
+$D_i^{cube}$ is a cubic uniform \ac{pdf} around the center of voxel $i$ and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
 The length of the rays is set to the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
-Each ray is intersected with the micro-geometry, the number of hits and the total number of rays casted determine the occlusion probability \cite{hybrid_mesh_volume_lods}:
+Each ray is intersected with the micro-geometry \cite{hybrid_mesh_volume_lods}.
+The number of hits and the total number of rays casted determine the occlusion probability \cite{hybrid_mesh_volume_lods}:
 \begin{equation*}
     P_{occ}=\frac{nbHits}{nbRays}.
 \end{equation*}

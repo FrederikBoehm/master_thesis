@@ -34,8 +34,8 @@ If the edge lengths of the mesh's bounding box do not evenly divide by the size 
 In each voxel we then sample the origin of our rays on a cubic uniform domain and the direction of the rays is uniformly sampled over the unit sphere.
 \citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to a blurring since adjacent geometry is included in the density estimation.
 As \citeauthor{wang_object_space_aliasing} points out, this can reduce object space aliasing \cite{wang_object_space_aliasing}.
-However we think, that we can increase the spatial resolution while preserving the blurring by clipping the ray at a bounding sphere.
-We position the sphere at the voxel's center and scale it such a way that its diameter is slightly larger than the diagonal of the voxel.
+However we think, that we can increase the spatial resolution while still minimizing object space aliasing by clipping the ray at a bounding sphere.
+We position the sphere at the voxel's center and scale it such that its diameter is slightly larger than the diagonal of the voxel.
 Each ray is then first intersected with this sphere to compute a $t_{max}$, before the intersection test with the mesh geometry happens.
 Figure \ref{fig:raygen_filtering} compares our approach for determining the ray length with the approach of \citeauthor{hybrid_mesh_volume_lods}.
 \begin{figure}[ht]
@@ -63,7 +63,7 @@ We therefore have to find a density $\rho$ that suffices:
     \label{eq:our_filtering_equation}
 \end{equation}
 Note that the projected area $\sigma$ is now independent of the direction $\omega$, whereas the ray length depends on $\omega$, since the rays are clipped by the bounding sphere.
-As stated in Section \ref{sec:transforming_meshes_into_volumes}, we cannot solve for the density with analytical methods, therefore we iteratively optimize $rho$:
+As stated in Section \ref{sec:transforming_meshes_into_volumes}, we cannot solve for the density with analytical methods, therefore we iteratively optimize $\rho$:
 \begin{equation*}
     \rho_{i+1}=\rho_i - \alpha (P_{occ,volume} - P_{occ,mesh}),
 \end{equation*}
@@ -81,7 +81,8 @@ We represent these attributes as a dense grid in the \acs{gpu}'s global memory.
 OpenVDB cannot be used for this, because it is incompatible with CUDA device code \cite{museth_nanovdb}, NanoVDB on the other hand, is a read-only grid \cite{nanovdb}.
 Only after copying the dense grid to host memory we convert it into an OpenVDB grid and subsequently into a NanoVDB grid which we store to disk.
 The usage of NanoVDB imposes a limit of storing 32 bytes per voxel which we can't increase in the limited time frame of the thesis \cite{open_to_nanovdb}.
-Because our attributes occupy 80 bytes of memory, we use quantization to represent the values in the grid and before doing computations like interpolation or shading, we transform them back to the full width.
+Because our attributes occupy 80 bytes of memory, we use quantization to represent the values in the grid.
+Before doing computations like interpolation or shading, we transform them back to the full width.
 The following table summarizes the size of all attributes in regular and quantized format (ignoring padding):
 \begin{center}
     \begin{tabular}{| c | c | c | }
@@ -114,26 +115,90 @@ The number of voxels is then computed from the voxel size and the size of the tr
 The reason for choosing a voxel size between 0.1m and 6.4m is because for finer voxels the grids quickly use more memory than their surface representations.
 Choosing even larger sizes has no effect, since some trees are already represented by a single voxel on the coarsest level.
 We cast 100 rays in each voxel to estimate the occlusion probability and optimize the density $\rho$ in 20 iterations.
-On average it takes $\SI{0.14}{\s}$ to filter a model and the resulting grids occupy 940MB of disk space, where the finest \acsp{lod} are responsible for 65\% of this data.
+On average it takes $\SI{0.14}{\s}$ to filter a model and the resulting grids of all models occupy 940MB of disk space, where the finest \acsp{lod} are responsible for 65\% of this data.
 In Chapter \ref{chap:results_and_discussion} we discuss how dropping this \ac{lod} affects image quality and rendering times.
 
 % Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the surface representation for some models.
 A comparison between some two \acsp{lod} and the corresponding surface representation is illustrated in Figure \ref{fig:lods_comparison}.
 \begin{figure}[ht]
     \begin{center}
-        \begin{tabularx}{\textwidth}{ X  X  X  X  }
-            \hline
-            Model & Mesh & Volume \newline(Voxel size = 0.1m) & Volume \newline(Voxel size = 0.8m) \\
-            \hline
-            Acer\newline rubrum\newline adult & \adjustimage{height=3.9cm,valign=m}{img/EA01a_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/EA01a_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/EA01a_0.8.png} \\
-            \hline
-            Acacia\newline sophorae 9 & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/OC41_9_0.8.png} \\
-            \hline
-            Celtis\newline australis\newline medium & \adjustimage{height=3.9cm,valign=m}{img/EU06m_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/EU06m_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/EU06m_0.8.png} \\
-            \hline
-            Pinus\newline muricata\newline adult & \adjustimage{height=3.9cm,valign=m}{img/CL13a_mesh.png} & \adjustimage{height=3.9cm,valign=m}{img/CL13a_0.1.png} & \adjustimage{height=3.9cm,valign=m}{img/CL13a_0.8.png} \\
-            \hline
-        \end{tabularx}
+        \begin{minipage}[c]{0.24\textwidth}
+            \begin{flushleft}
+                Model
+            \end{flushleft}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \centering
+            Mesh
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \centering
+            Volume \\ (Voxel size = 0.1m)
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \centering
+            Volume \\ (Voxel size = 0.8m)
+        \end{minipage}
+    
+        \begin{minipage}[c]{0.24\textwidth}
+            \begin{flushleft}
+                Acer rubrum adult
+            \end{flushleft}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/EA01a_mesh.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/EA01a_0.1.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/EA01a_0.8.png}
+        \end{minipage}
+    
+        \begin{minipage}[c]{0.24\textwidth}
+            \begin{flushleft}
+                Acacia sophorae 9
+            \end{flushleft}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/OC41_9_mesh.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/OC41_9_0.1.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/OC41_9_0.8.png}
+        \end{minipage}
+    
+        \begin{minipage}[c]{0.24\textwidth}
+            \begin{flushleft}
+                Celtis australis medium
+            \end{flushleft}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/EU06m_mesh.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/EU06m_0.1.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/EU06m_0.8.png}
+        \end{minipage}
+    
+        \begin{minipage}[c]{0.24\textwidth}
+            \begin{flushleft}
+                Pinus muricata adult
+            \end{flushleft}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/CL13a_mesh.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/CL13a_0.1.png}
+        \end{minipage}
+        \begin{minipage}[c]{0.24\textwidth}
+            \includegraphics[valign=c, width=\linewidth]{img/CL13a_0.8.png}
+        \end{minipage}
     \end{center}
     \caption[Comparison between mesh and volume renderings]{Comparison between the surface representation in the first column, the \ac{lod} with a voxel size of $\SI{0.1}{\m}$ in column two and the \ac{lod} with a voxel size of $\SI{0.8}{\m}$ in the last column.}
     \label{fig:lods_comparison}
@@ -204,7 +269,7 @@ We want to select \acp{lod} based on the heuristic that each voxel covers at mos
     \frac{n_{voxel}}{n_{pixel}} > 1.
 \end{equation*}
 Therefore, we now have to compute the number of voxels that we see.
-Calculating the product of the number of voxels in depth, height and width gives too many voxels, since some of the voxels are hidden by others.
+Calculating the product of the number of voxels in depth, height and width gives too many voxels, since we only see a two dimensional projection of the volume.
 Computing $depth \times height$, $depth \times width$ or $height \times width$ is only valid for viewing angles that are perpendicular to the surface of the voxel grid.
 Another approach is to position a plane at the center of the grid and orient it towards the camera by aligning the normal with the direction to the camera.
 The number of voxels that this plane intersects would then be a ground truth value for the voxels that we see.
@@ -243,7 +308,7 @@ Additionally, we see the frustum of the camera: Within the view frustum we selec
 \label{sec:rendering}
 We render meshes and volumes using path tracing.
 Like our filtering implementation, our path-tracer is also \ac{gpu} accelerated using OptiX \cite{parker_optix}.
-For fast convergence we employ next event estimation and use importance sampling of the scattering functions and the environment map.
+For fast convergence we employ next event estimation and we use importance sampling of the scattering functions and the environment map.
 Russian roulette is used to terminate insignificant paths.
 In order to render scenes with many meshes and volumes, we use instancing.
 A certain mesh or volume thus has to occupy \ac{gpu} memory just once and for each usage an instance is created, each with its own model transformation.
