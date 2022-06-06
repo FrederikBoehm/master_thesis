@@ -1,9 +1,9 @@
 \chapter*{Abstract}
 Level of detail (LOD) rendering is a widely used technique in modern renderers to reduce render times and aliasing in scenes with far viewing distances.
-Various approaches exist to apply this technique but they all have in common to render less detailed models at increasing distances.
+Various approaches exist that apply this technique, but they all have in common to render less detailed models at increasing distances.
 This thesis proposes an approach for \acs{lod} rendering by representing surface meshes with volumes.
 We use ray casting to filter the surface meshes and obtain volume representations with differing detail.
 The optimal \ac{lod} is selected using a heuristic which compares the number of voxels the camera sees with the number of pixels the volume covers on the image plane.
-On a large forest scene, we test different ratios of these numbers and different minimum voxel sizes in order to find a tradeoff between a good render performance and image quality.
+On a large forest scene, we evaluate different ratios of these numbers and different minimum voxel sizes in order to find a tradeoff between a good render performance and image quality.
 Additionally, tests regarding quality and performance are performed on single model instances.
 All rendering is done in a custom developed physically based path-tracer.

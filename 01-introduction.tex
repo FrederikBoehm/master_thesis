@@ -31,7 +31,7 @@ The density is obtained from a particle system which models the flow of a hair u
 
 In a paper by \citeauthor{meng_multi_scale_modeling_and_rendering_of_granular_materials} volumetric representations of grains are used for efficient path tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 For modeling the light scattering in the volume the authors use a tabulated phase function.
-This phase function is measured from simulating the light scattering of a single grain using ray-tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
+This phase function is measured from simulating the light scattering of a single grain using ray tracing \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 The extinction coefficient is computed from the simulation results as well since the authors also track the mean free-flight distance between successive interactions with grain \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 Compared to the surface representation, the authors observe a speedup of 2.1-30$\times$ depending on the test scene \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.
 The authors argue that this speedup occurs because the surface representations cannot employ next event estimation if a grain is occluded by other grains \cite{meng_multi_scale_modeling_and_rendering_of_granular_materials}.

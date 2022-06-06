@@ -12,12 +12,12 @@ A performance improvement should still be the result.
 Another interesting area of research would be to further improve the performance of our approach and possibly switch the \acsp{lod} on the fly.
 This would allow a camera movement without making the \acsp{lod} misalign the current view frustum.
 The scene generator would have to be written in C++ for that and optimization of the program itself have to be made.
-A large improvement can be expected by caching the free positions in the forest area, since we initialize the random number generator with the same seed anyway.
-However this is limited to our forest scene.
+A substantial improvement can be expected by caching the free positions in the forest area, since we initialize the random number generator with the same seed anyway.
+However, this is limited to our forest scene.
 A more portable optimization would be to approximate the pixels a bounding box covers by a rectangle instead of the convex hull that we currently use.
 Also using brick grid for storing all voxel attributes like color values or the \ac{sggx} matrix $S$ might be worth investigating regarding the performance implications.
 
 Having the knowledge that rough \acsp{lod} do not necessarily render faster than meshes, a further optimization would be to not simply set models outside of the view frustum to the roughest \ac{lod}.
-Instead it might be beneficial to also incorporate the distance to the camera for these and use the mesh representations first.
+Instead, it might be beneficial to also incorporate the distance to the camera for these and use the mesh representations first.
 Only after a certain distance from the camera the roughest \ac{lod} would be selected.
 Furthermore, we might want to use a different heuristic of \ac{lod} selection for each model, since we learned from Figure \ref{fig:render_time_comparisons} that \ac{lod} rendering surpasses mesh rendering at different distances for different models.
