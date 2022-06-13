@@ -113,9 +113,9 @@ The specular component gives discrete specular highlights on the surfaces while 
 So our approach fails in preserving the visual appearance of the meshes.
 We identify two reasons for this limitation: First, the \ac{sggx} phase function is defined on the whole unit sphere (recall Figure \ref{fig:sggx_ndf}), which means that half of the rays are reflected into the medium where they are attenuated, while for surfaces all rays are reflected away from the surface.
 Second, it is likely that this error occurred due to the usage of an isotropic microflake projected area, which directly influences our density values.
-As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$. % TODO: Maybe add example for effect of lowering roughness of leafs
+As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$. % TODO: Maybe add example for effect of lowering roughness of leaves
 Using an anisotropic projected area therefore can lead to a significantly different look.
-The filtering procedure however, would become more complex.
+The filtering procedure, however, would become more complex.
 Experiments in this direction are outside of the scope of this thesis.
 
 % This affects our density values, since the density is also optimized based on the microflake projected area $sigma$.
@@ -236,7 +236,7 @@ Since we use instancing of the geometry, texture and volume grids, the memory fo
 But we can analyze how much memory is used if we would not use instancing.
 This gives us an idea, how our approach performs regarding memory consumption, if we had many distinct models in the scene, which is typical for feature films.
 This analysis could also be interesting if the scene's assets need to be streamed over a network and the load on the network has to be minimized.
-Due to system limitations, we cannot render such scenes anymore, but it is enough to know the memory usage of each model's \ac{lod} and the distibution of the model's \acsp{lod} in a scene to obtain the total memory consumption.
+Due to system limitations, we cannot render such scenes anymore, but it is enough to know the memory usage of each model's \ac{lod} and the distribution of the model's \acsp{lod} in a scene to obtain the total memory consumption.
 Without instancing, the reference scene would consume $\SI{830}{GB}$ of memory.
 As Figure \ref{fig:memory_usage} visualizes in the familiar heatmap, we can reduce this footprint, by choosing any of the different \ac{lod} configurations.
 \begin{figure}[t]
@@ -250,7 +250,7 @@ However, increasing the number of pixels that a voxel may cover, reduces the mem
 Comparing Figure \ref{fig:memory_usage} and Figure \ref{fig:flip_errors}, we see that a high memory consumption correlates with a low \FLIP error, while a low memory footprint correlates with a high \FLIP error.
 The memory consumption therefore behaves inverse to the \FLIP error.
 Interestingly, the configuration with the lowest render time from Figure \ref{fig:lod_grid_durations}, does not have the smallest memory footprint.
-We can therefore conclude, that the memory consumption is not the only variable that plays into the render time of a scene.
+We can therefore conclude that the memory consumption is not the only variable that plays into the render time of a scene.
 
 \section{Experiments on Single Model Instances}
 \label{sec:experiments_on_single_model_instances}
@@ -293,7 +293,7 @@ We can see the render times of this experiment plotted in Figure \ref{fig:render
 	\label{fig:render_time_comparisons}
 \end{figure}
 Interestingly, the meshes first render faster than all \acsp{lod}.
-With increasing distance the render times of the volumetric representations then decrease rapidly and eventually fall below the render time of the mesh representation.
+With increasing distance, the render times of the volumetric representations then decrease rapidly and eventually fall below the render time of the mesh representation.
 For the model \textit{Celtis australis adult} this is the case after $\SI{800}{\m}$ and for the model \textit{Acer rubrum adult} a \ac{lod} renders faster after $\SI{700}{\m}$.
 Surprisingly, the render times for the mesh representations only decline in the beginning, but after a certain distance they rise steadily.
 An explanation for this could be that at a certain distance the random sampling of a pixel produces large jumps across the bounding volume hierarchy, which leads to many cache misses.

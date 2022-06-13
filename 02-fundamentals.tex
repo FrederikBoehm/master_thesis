@@ -39,7 +39,7 @@ However, implementing the algorithm this way is infeasible since that would lead
 As a solution to this problem \citeauthor{rendering_equation} proposed the \textit{path tracing} algorithm \cite{rendering_equation}.
 Instead of sampling $N$ new directions at each point of intersecting the geometry, we sample a single direction at each intersection point starting at the camera until we hit a light source.
 Conceptually the recursive approach spans up a ray tree.
-In this tree the root represents the camera, a new level is added at each point of reflection and the leafs are light hits.
+In this tree the root represents the camera, a new level is added at each point of reflection and the leaves are light hits.
 Path tracing then only samples one path from the root to a light source in this tree \cite{rendering_equation}.
 Sampling only one path is a bad estimate of the integral, but when we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
 Additionally, there are methods to reduce the variance of the paths like importance sampling or next event estimation.
@@ -58,7 +58,7 @@ Although it is conceptually helpful to think of volumes as these \textit{dense g
 For example, if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = 1 - \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx \SI{48}{\%}$ of the voxels will store a density of zero.
 Therefore, we would like to store relevant values only, which is called a \textit{sparse grid}.
 \citeauthor{museth_vdb} uses this approach in the OpenVDB library and stores the grid in a B+tree \cite{museth_vdb}.
-For fast traversal, leafs and internal nodes still use dense arrays but the root node is represented by a hash table to allow for a dynamic number of voxels.
+For fast traversal, leaves and internal nodes still use dense arrays but the root node is represented by a hash table to allow for a dynamic number of voxels.
 Compared to the dense grid, the background value is just stored once in the root node \cite{museth_vdb}.
 A \ac{gpu} compatible port of OpenVDB is NanoVDB.
 It removes third-party dependencies of OpenVDB and is designed as a header-only library.
@@ -165,7 +165,7 @@ This idea is visualized in Figure \ref{fig:brick_grid_majorants}.
     \caption[Visualization of local density majorants]{Visualization of the concept of local majorants. These allow to sample distances and estimate transmittance more efficiently (Image from \cite{brick_grid}).}
     \label{fig:brick_grid_majorants}
 \end{figure}
-To store the volume data we use three textures.
+To store the volume data, we use three textures.
 First, we use an \textit{atlas texture} to store \textit{bricks} which are groups of $8 \times 8 \times 8$ voxels \cite{brick_grid}.
 The second texture is the \textit{indirection texture} which stores offsets into the atlas.
 This texture therefore links a position in space to a brick of data in the atlas \cite{brick_grid}.
@@ -197,7 +197,7 @@ This is repeated until a distance is successfully sampled, the transmittance est
 In Equation \ref{eq:in_scattered_radiance} the term of a \textit{phase function} was already introduced.
 Now we want to explain this concept in more detail.
 % Similar like a \acs{brdf} gives the amount of light scattered into a certain direction on a surface, a phase function gives this amount in a volume when an interaction with a particle occurs \cite{novak_overview}.
-Analogous to how how the \ac{brdf} describes how light is scattered when interacting with a surface, the phase function models how light scatters when an interaction with a particle occurs \cite{novak_overview}.
+Analogous to how the \ac{brdf} describes how light is scattered when interacting with a surface, the phase function models how light scatters when an interaction with a particle occurs \cite{novak_overview}.
 Opposed to \acsp{brdf}, phase functions are normalized over the unit sphere $\mathcal{S}^2$, therefore they can be seen as \acsp{pdf} as well \cite{pbr}.
 For the isotropic case, meaning that light is scattered in all directions with equal probability, we can ensure the normalization by dividing with the integration domain, which is $4\pi$ for the unit sphere \cite{pbr}.
 This gives us the isotropic phase function \cite{novak_overview}:

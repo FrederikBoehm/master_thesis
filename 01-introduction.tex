@@ -43,7 +43,7 @@ The density is obtained from a particle system which models the flow of a hair u
 % For specular reflection the authors
 
 In a paper by \citeauthor{meng_multi_scale_modeling_and_rendering_of_granular_materials}, volumetric representations of grains are used for efficient path tracing.
-For modeling the light scattering in the volume the authors use a tabulated phase function.
+For modeling the light scattering in the volume, the authors use a tabulated phase function.
 This phase function is measured from simulating the light scattering of a single grain using ray tracing.
 The extinction coefficient is computed from the simulation results as well, since the authors also track the mean free-flight distance between successive interactions with grain.
 Compared to the surface representation, the authors observe a speedup of 2.1-30$\times$ depending on the test scene.
@@ -71,7 +71,7 @@ A fundamentally different approach is taken by \citeauthor{mildenhall_nerf} \cit
 They use a neural network based approach to represent radiance emitted by volumes.
 These neural networks take a world position $(x, y, z)$ and a view direction $(\theta, \phi)$ as input and output the RGB color and the density.
 The authors call these networks \acp{nerf} and they can be rendered using classical volume rendering principles.
-A limitation of their approach is, that \acsp{nerf} can only represent static scenes with static lighting \cite{mildenhall_nerf}.
+A limitation of their approach is that \acsp{nerf} can only represent static scenes with static lighting \cite{mildenhall_nerf}.
 This sets apart our approach, which works for arbitrary models and changing lighting conditions.
 
 \subsection{Efficient Volume Rendering}
@@ -205,7 +205,7 @@ Starting from the root, voxelization is then performed on every third level for 
 Their voxelization procedure is based on rasterization, where the triangles within a voxel are projected to all six sides of the voxel.
 The authors then average normals and colors and store this average if the maximum absolute difference between the samples and the average is below a threshold.
 If that is not the case, all six samples are stored.
-The resulting kd-tree represents inner nodes using voxels and the leafs are represented by single triangles.
+The resulting kd-tree represents inner nodes using voxels and the leaves are represented by single triangles.
 \citeauthor{afra_voxel_lods} then renders the scene using ray tracing against the kd-tree.
 The tree is traversed and for every voxel node, the screen space area of that node respectively the voxel is computed to determine whether to continue traversal \cite{afra_voxel_lods}.
 
@@ -213,7 +213,7 @@ Compared to \citeauthor{afra_voxel_lods}, \citeauthor{hybrid_mesh_volume_lods} p
 The authors use a hybrid approach between mesh and volume \acp{lod}.
 Their idea is to represent macroscopic surfaces (larger than the target resolution) as mesh \acsp{lod} while microscopic geometry (smaller than the target resolution) is represented by volumes.
 The first step in their pipeline is the separation of the macroscopic from the microscopic geometry.
-For example, the trunk of a tree would be separated from its branches and leafs.
+For example, the trunk of a tree would be separated from its branches and leaves.
 The second step is to apply mesh simplification on the macroscopic surface while preserving the reflectance properties.
 The authors achieve mesh simplification by using edge collapse, therefore they remove triangle edges which are smaller than the target resolution.
 To preserve reflectance, the authors update the diffuse and specular albedos of the remaining vertices by a weighted sum of the old vertices.
@@ -232,7 +232,7 @@ Our work provides the following contributions:
     \item Implementation of a \ac{gpu} accelerated application for transforming triangle meshes into preferably equivalent volumetric representations in different resolutions and storing these representations in a usual format.
     \item Extending these volumetric representations by attributes like color, normals and other material properties to approximate surfaces more closely.
     \item Implementation of a \ac{gpu} based renderer capable of rendering surface meshes and volumes.
-    \item A empirically motivated heuristic to determine which \ac{lod} should be rendered.
+    \item An empirically motivated heuristic to determine which \ac{lod} should be rendered.
     \item A scene generator that generates forest scenes, incorporating the heuristic for \ac{lod} selection.
     \item Evaluation of the tradeoff between image quality, rendering performance and memory consumption when triangle meshes are approximated by volumetric \acsp{lod}.
 \end{itemize}

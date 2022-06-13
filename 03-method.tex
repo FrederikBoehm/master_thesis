@@ -20,8 +20,8 @@ This final evaluation step is explained in Chapter \ref{chap:results_and_discuss
 
 Although our pipeline can be used with arbitrary models, we only use tree models with it.
 Trees generally are difficult to render, which makes them a good benchmark for our approach.
-The difficulties stem from the high detailed geometry of the branches and leafs, which can lead to aliasing.
-As leafs usually are modeled as simple planes with alpha maps applied to them, they pose another challenge on the isotropic volumes that we use.
+The difficulties stem from the high detailed geometry of the branches and leaves, which can lead to aliasing.
+As leaves usually are modeled as simple planes with alpha maps applied to them, they pose another challenge on the isotropic volumes that we use.
 The trees that we use are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
 Meshes and textures together occupy 1.2 GB of disk memory.
 Apart from the models itself, XfrogPlants also provides information of the sizes the trees grow during their lifespan, which we also need during filtering and scene generation.
@@ -31,9 +31,10 @@ Apart from the models itself, XfrogPlants also provides information of the sizes
 As described in Section \ref{sec:transforming_meshes_into_volumes}, we use the ray casting approach by \citeauthor{hybrid_mesh_volume_lods} with a few modifications for our filtering \cite{hybrid_mesh_volume_lods}.
 The ray casting is \ac{gpu} accelerated using OptiX \cite{parker_optix}.
 In contrast to \citeauthor{hybrid_mesh_volume_lods}, we assume our particles to have an isotropic microflake projected area $\sigma$, meaning that it is not view dependent.
-These isotropic are spherical, since a sphere has the same shape from all directions.
-If the geometry to be filtered has a non-sperical shape an error is introduced, which gets largest for planar geometry: A perfect plane is invisible when viewed parallelly, but it is opaque for perpendicular viewing directions.
-Dispite this shortcoming of isotropic media, we choose them for the \acsp{lod}, because this greatly simplifies our optimization procedure during filtering, as well as the distance sampling and transmittance estimation during rendering.
+An isotropic projected area implies that the particles are spheres, since a sphere has the same shape from all directions.
+If the geometry, that should be represented by an isotropic medium, has a non-spherical shape, an error is introduced.
+This error gets largest for planar geometry: A perfect plane is invisible when viewed parallelly, but it is opaque for perpendicular viewing directions.
+Despite this shortcoming of isotropic media, we choose them for the \acsp{lod}, because this greatly simplifies our optimization procedure during filtering, as well as the distance sampling and transmittance estimation during rendering.
 
 During filtering we place the voxel grid over the mesh and align it to three sides of the bounding box of the mesh.
 If the edge lengths of the mesh's bounding box do not evenly divide by the size of a voxel, we let the volume overlap on the non-aligned sides.
@@ -222,10 +223,10 @@ Our generator uses a rejection sampling approach, rejecting samples that are too
 It is similar to a Poisson disk sampler \cite{poisson_sampling}, however it uses varying spacing between the samples depending on the model size.
 To this end, we exported the bounding box sizes of the volumes during filtering.
 
-A preparatory step for the scene generation is the classifiction of the tree models into the class \textit{Large}, \textit{Medium} or \textit{Small}.
+A preparatory step for the scene generation is the classification of the tree models into the class \textit{Large}, \textit{Medium} or \textit{Small}.
 We assign trees that grow 20-35 meters to the class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
 This allows us to control the age of the forest.
-For example, if we want an old forest, we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
+For example, if we want an old forest, we increase the probability for class \textit{Large} and if we want a rather young forest, we increase the probability for \textit{Small} trees.
 
 In the scene generator we first identify the largest bounding box for each model.
 Differences in the bounding box size of a model can occur, because during filtering we make sure that the mesh is fully enclosed by voxels for a given voxel size.
@@ -273,7 +274,7 @@ If we generate a ground truth scene, meaning that it contains only mesh models, 
 Knowledge of the camera position, gaze direction, the \ac{fov} and the sensor resolution are essential for that.
 Note that a consequence is, that this information is baked into the scene description and moving the camera during rendering leads to a mismatch of the \acp{lod}.
 Generating the scene in the renderer on the fly is currently no option.
-The performane of the renderer would be significantly worse due to the evaluation of the heuristic and the reconstruction of the \ac{bvh}.
+The performance of the renderer would be significantly worse due to the evaluation of the heuristic and the reconstruction of the \ac{bvh}.
 For positions outside the view frustum, we choose the coarsest \ac{lod}, since these are not visible and only participate in indirect lighting.
 If the position is inside the view frustum, we project the eight bounding box vertices of the coarsest volume on the image plane and compute the area of their convex hull using \texttt{scipy.spatial.ConvexHull} \cite{scipy}.
 This gives us the number of pixels that the volume covers on the sensor.
@@ -286,7 +287,7 @@ Calculating the product of the number of voxels in depth, height and width gives
 Computing $depth \times height$, $depth \times width$ or $height \times width$ is only valid for viewing angles that are perpendicular to the surface of the voxel grid.
 Another approach is to position a plane at the center of the grid and orient it towards the camera by aligning the normal with the direction to the camera.
 The number of voxels that this plane intersects would then be a ground truth value for the voxels that we see.
-Evaluating this however, is really expensive since each voxel has to be tested whether it intersects the plane.
+Evaluating this, however, is really expensive since each voxel has to be tested whether it intersects the plane.
 We choose a faster approach that approximates this value and is depicted in Figure \ref{fig:voxel_estimation}.
 \begin{figure}[t]
     \centering
@@ -339,13 +340,13 @@ We do the same for textures by loading only textures that differ in their file p
 Each material then stores a pointer to the memory location of the texture.
 
 The surfaces in our renderer use the Lambertian diffuse \cite{lambert} and the Trowbridge-Reitz microfacet \ac{brdf} \cite{trowbridge_reitz}, which is the general form of the GGX \ac{brdf}.
-As Figure \ref{fig:leaf_gloss} shows, real leafs can have a specular gloss, therefore we incorporate a specular \ac{brdf}.
-Our lighting model is still a crude approximation of the light transport in leafs, but it is a reasonable tradeoff between quality and implementation effort.
+As Figure \ref{fig:leaf_gloss} shows, real leaves can have a specular gloss, therefore we incorporate a specular \ac{brdf}.
+Our lighting model is still a crude approximation of the light transport in leaves, but it is a reasonable tradeoff between quality and implementation effort.
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.5\linewidth]{img/leaf_gloss.jpg}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
-    \caption[Leaf with glossy surface]{Real leafs often have a specular reflecting layer; therefore we incorporate a specular \ac{brdf} in our lighting calculations.}
+    \caption[Leaf with glossy surface]{Real leaves often have a specular reflecting layer. Therefore, we incorporate a specular \ac{brdf} in our lighting calculations.}
     \label{fig:leaf_gloss}
 \end{figure} 
 The models we use neither have a specular map nor a specular color associated in their materials.
@@ -367,12 +368,12 @@ Figure \ref{fig:leaf_renderings} shows renderings of this approach.
         \caption{}
         % \label{fig:bounding_size_2}
     \end{subfigure}
-	\caption[Comparison of renderings with and without specular maps]{Renderings of leafs using the default material (a) and our modification of converting the diffuse texture to a specular map (b).}
+	\caption[Comparison of renderings with and without specular maps]{Renderings of leaves using the default material (a) and our modification of converting the diffuse texture to a specular map (b).}
 	\label{fig:leaf_renderings}
 \end{figure}
 We combine the diffuse and microfacet \ac{brdf} using the Fresnel term $F$ \cite{fresnel}, which describes the amount of light reflected on a surface.
 It evaluates to values close to one for grazing angles and to one when light hits the surface perpendicularly \cite{pbr}.
-For a layered surface the effect of the diffuse reflection is biggest near perpendicular angles while specular reflection mostly is visible near grazing angles \cite{pbr}.
+For a layered surface, the effect of the diffuse reflection is biggest near perpendicular angles while specular reflection mostly is visible near grazing angles \cite{pbr}.
 We can therefore write our combined \ac{brdf} as:
 \begin{equation*}
     f(\boldsymbol{x}, \omega_o, \omega_i) = F(n_{\boldsymbol{x}}, \omega_o)f_{spec}(\boldsymbol{x}, \omega_o, \omega_i) + (1 - F(n_{\boldsymbol{x}}, \omega_o))f_{diff}(\boldsymbol{x}, \omega_o, \omega_i).
