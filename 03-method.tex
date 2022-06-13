@@ -1,7 +1,7 @@
 \chapter{Method}
 \label{chap:method}
 For our experiments, we follow the steps depicted in Figure \ref{fig:pipeline}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=1.0\linewidth]{img/pipeline.png}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
@@ -9,36 +9,42 @@ For our experiments, we follow the steps depicted in Figure \ref{fig:pipeline}.
     \label{fig:pipeline}
 \end{figure}
 We first take the surface meshes and apply the filtering procedure to obtain the volume grids.
-Additionally, we save metadata like the bounding-box sizes of the grids, which we then need for scene generation.
+Additionally, we save metadata like the bounding-box sizes of the grids, which we need for scene generation.
 This generation step can either generate ground-truth scenes that only contain meshes or it can generate scenes that use \acp{lod}.
+We generate the scenes once and store the scene description to disk.
 The next step in the pipeline is the rendering of the scene, which uses mesh or volume files depending on the definitions in the generated scene file.
 Finally, we evaluate our results by comparing the mesh-only renderings with the ones that use \ac{lod}.
-This is done regarding the image quality and the render performance between the mesh-only renderings and the \ac{lod} renderings.
+This is done regarding the image quality, the memory usage and the render performance.
 We are not interested in the absolute render times, but rather in the relative times between the mesh and volume representations.
-This final evaluation step is explained in Chapter \ref{chap:results_and_discussion} while all other steps are subject of this chapter.
+This final evaluation step is explained in Chapter \ref{chap:results_and_discussion}, while all other steps are subject of this chapter.
 
 Although our pipeline can be used with arbitrary models, we only use tree models with it.
-In total these are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
+Trees generally are difficult to render, which makes them a good benchmark for our approach.
+The difficulties stem from the high detailed geometry of the branches and leafs, which can lead to aliasing.
+As leafs usually are modeled as simple planes with alpha maps applied to them, they pose another challenge on the isotropic volumes that we use.
+The trees that we use are 26 free tree meshes from XfrogPlants \cite{xfrogplants} and the McGuire Computer Graphics Archive \cite{McGuire2017Data} which are available as \texttt{.obj} files with the textures being encoded as \texttt{.png} or \texttt{.tiff}.
 Meshes and textures together occupy 1.2 GB of disk memory.
 Apart from the models itself, XfrogPlants also provides information of the sizes the trees grow during their lifespan, which we also need during filtering and scene generation.
 
-\section{Mesh filtering}
+\section{Mesh Filtering}
 \label{sec:mesh_filtering}
 As described in Section \ref{sec:transforming_meshes_into_volumes}, we use the ray casting approach by \citeauthor{hybrid_mesh_volume_lods} with a few modifications for our filtering \cite{hybrid_mesh_volume_lods}.
 The ray casting is \ac{gpu} accelerated using OptiX \cite{parker_optix}.
 In contrast to \citeauthor{hybrid_mesh_volume_lods}, we assume our particles to have an isotropic microflake projected area $\sigma$, meaning that it is not view dependent.
-This greatly simplifies our optimization procedure as well as the distance sampling and transmittance estimation later during rendering.
+These isotropic are spherical, since a sphere has the same shape from all directions.
+If the geometry to be filtered has a non-sperical shape an error is introduced, which gets largest for planar geometry: A perfect plane is invisible when viewed parallelly, but it is opaque for perpendicular viewing directions.
+Dispite this shortcoming of isotropic media, we choose them for the \acsp{lod}, because this greatly simplifies our optimization procedure during filtering, as well as the distance sampling and transmittance estimation during rendering.
 
 During filtering we place the voxel grid over the mesh and align it to three sides of the bounding box of the mesh.
 If the edge lengths of the mesh's bounding box do not evenly divide by the size of a voxel, we let the volume overlap on the non-aligned sides.
 In each voxel we then sample the origin of our rays on a cubic uniform domain and the direction of the rays is uniformly sampled over the unit sphere.
-\citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to a blurring since adjacent geometry is included in the density estimation.
-As \citeauthor{wang_object_space_aliasing} points out, this can reduce object space aliasing \cite{wang_object_space_aliasing}.
+\citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to blurring since adjacent geometry is included in the density estimation.
+As \citeauthor{wang_object_space_aliasing} point out, this can reduce object space aliasing \cite{wang_object_space_aliasing}.
 However we think, that we can increase the spatial resolution while still minimizing object space aliasing by clipping the ray at a bounding sphere.
 We position the sphere at the voxel's center and scale it such that its diameter is slightly larger than the diagonal of the voxel.
-Each ray is then first intersected with this sphere to compute a $t_{max}$, before the intersection test with the mesh geometry happens.
-Figure \ref{fig:raygen_filtering} compares our approach for determining the ray length with the approach of \citeauthor{hybrid_mesh_volume_lods}.
-\begin{figure}[ht]
+Each ray is then first intersected with this sphere to compute a $t_{max}$, before intersecting it with the actual geometry.
+Figure \ref{fig:raygen_filtering} compares our approach for determining the ray length with the approach of \citeauthor{hybrid_mesh_volume_lods} \cite{hybrid_mesh_volume_lods}.
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.25\linewidth}
         \centering
@@ -52,36 +58,37 @@ Figure \ref{fig:raygen_filtering} compares our approach for determining the ray 
         \caption{}
         \label{fig:raygen_filtering_clipped}
     \end{subfigure}
-	\caption[Approaches for determining a ray length for filtering]{Image (a) shows the approach by \citeauthor{hybrid_mesh_volume_lods} with constant ray length. Figure (b) shows our approach with ray clipping at a bounding sphere.}
+	\caption[Approaches for determining a ray length for filtering]{Image (a) shows the approach by \citeauthor{hybrid_mesh_volume_lods} \cite{hybrid_mesh_volume_lods} with constant ray length. Figure (b) shows our approach with ray clipping at a bounding sphere.}
 	\label{fig:raygen_filtering}
 \end{figure}
 
 With these modifications we also have to solve a different integral than that from Equation \ref{eq:loubet_filtering_equation}.
 We therefore have to find a density $\rho$ that suffices:
 \begin{equation}
-    1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho\sigma ray_l(\omega)} d\omega = P_{occ}.
+    1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho \, \sigma \, ray_l(\omega)} d\omega = P_{occ}.
     \label{eq:our_filtering_equation}
 \end{equation}
 Note that the projected area $\sigma$ is now independent of the direction $\omega$, whereas the ray length depends on $\omega$, since the rays are clipped by the bounding sphere.
-As stated in Section \ref{sec:transforming_meshes_into_volumes}, we cannot solve for the density with analytical methods, therefore we iteratively optimize $\rho$:
+If we didn't employ ray clipping, we could solve the integral analytically for the density, but since the ray length depends on the direction $\omega$ we iteratively optimize $\rho$:
 \begin{equation*}
-    \rho_{i+1}=\rho_i - \alpha (P_{occ,volume} - P_{occ,mesh}),
+    \rho_{i+1}=\rho_i - \gamma (P_{occ,volume} - P_{occ,mesh}),
 \end{equation*}
-where $i$ denotes the iteration and $\alpha$ is a learning rate.
+where $i$ denotes the iteration and $\gamma$ is a learning rate.
 $P_{occ,mesh}$ is the ratio of geometry hits to the total number of rays casted and $P_{occ,volume}$ is the probability that a medium interaction takes place given the density $\rho_i$.
 It is computed by Monte Carlo integrating Equation \ref{eq:our_filtering_equation}, so our estimator has the form:
 \begin{equation*}
-    1 - \frac{1}{N}\sum_{n=1}^{N} e^{-\rho\sigma ray_l(\omega_n)} = P_{occ,volume}.
+    1 - \frac{1}{N}\sum_{n=1}^{N} e^{-\rho \, \sigma \, ray_l(\omega_n)} = P_{occ,volume}.
 \end{equation*}
 Apart from this density estimate we also filter the diffuse and specular color of the geometry, the normals, the index of refraction and the SGGX Matrix $S$ by averaging.
-The Matrix $S$ serves later as a coordinate frame for sampling reflection directions with the phase function \cite{sggx}.
+The Matrix $S$ serves as a coordinate frame when sampling the phase function \cite{sggx}.
 
 % In total our attributes occupy 80 bytes of memory per voxel and we first represent them by a dense grid in the \ac{GPU}'s global memory.
 We represent these attributes as a dense grid in the \acs{gpu}'s global memory.
-OpenVDB cannot be used for this, because it is incompatible with CUDA device code \cite{museth_nanovdb}, NanoVDB on the other hand, is a read-only grid \cite{nanovdb}.
-Only after copying the dense grid to host memory, we convert it into an OpenVDB grid and subsequently into a NanoVDB grid which we store to disk.
-The usage of NanoVDB imposes a limit of storing 32 bytes per voxel which we can't increase in the limited time frame of the thesis \cite{open_to_nanovdb}.
-Because our attributes occupy 80 bytes of memory, we use quantization to represent the values in the grid.
+OpenVDB cannot be used for this, because it is incompatible with CUDA device code \cite{museth_nanovdb}.
+NanoVDB can be used on the \ac{gpu}, but it is a read-only grid \cite{nanovdb}.
+Only after copying the dense grid to host memory, we convert it into an OpenVDB grid and subsequently into a NanoVDB grid which we store on disk.
+The usage of NanoVDB imposes a limit of storing 32 bytes per voxel \cite{open_to_nanovdb}, but our attributes occupy 80 bytes of memory.
+Increasing this limit results in a major implementation overhead, so we use quantization to compress the values in the grid.
 Before doing computations like interpolation or shading, we transform them back to the full width.
 The following table summarizes the size of all attributes in regular and quantized format (ignoring padding):
 \begin{center}
@@ -107,20 +114,23 @@ The following table summarizes the size of all attributes in regular and quantiz
 \end{center}
 Note that since $S$ is a symmetric matrix, it is enough to store six coefficients \cite{sggx}.
 Apart from storing the NanoVDB grid, we also store the brick grid, which only contains the density values of each voxel.
-In principle, it would be possible to store all voxel attributes in brick grid, though the performance gain would be small and modifying brick grid to support this would exceed the available time.
-For every \ac{lod} we also export metadata which encompasses the number of voxels in the grid and the bounding box dimensions during filtering.
+In principle, it would be possible to store all voxel attributes in the brick grid, though the expected performance gain would not have been worth the implementation overhead.
+The lower cache coherency of using two grids only has a small impact on the performance, since we use the NanoVDB grid only after having sampled a collision with the brick grid.
+Besides the two grids, we also export metadata for every \ac{lod}, which encompasses the number of voxels in the grid and the bounding box dimensions during filtering.
 
-We generate 7 \acsp{lod} for voxel sizes from 0.1m to 6.4m, doubling the size of a voxel for each \ac{lod}.
-The number of voxels is then computed from the voxel size and the size of the trees.
-The reason for choosing a voxel size between 0.1m and 6.4m is because for finer voxels the grids quickly use more memory than their surface representations.
+We generate 7 \acsp{lod} for voxel sizes from $\SI{0.1}{\m}$ to $\SI{6.4}{\m}$, doubling the size of a voxel for each \ac{lod}.
+The number of voxels is then computed from the voxel size and the size of the mesh.
+We settled for these voxel sizes, as for smaller voxels the grid quickly exceeds the mesh representation in terms of memory consumption.
 Choosing even larger sizes has no effect, since some trees are already represented by a single voxel on the coarsest level.
-We cast 100 rays in each voxel to estimate the occlusion probability and optimize the density $\rho$ in 20 iterations.
-On average it takes $\SI{0.14}{\s}$ to filter a model and the resulting grids of all models occupy 940MB of disk space, where the finest \acsp{lod} are responsible for 65\% of this data.
+We cast 100 rays in each voxel to estimate the occlusion probability and optimize the density $\rho$ in 20 iterations. % TODO: Discuss dynamic number of rays depending on voxel size
+On average it takes $\SI{0.14}{\s}$ to filter a model and the resulting grids of all models occupy 940 MB of disk space, which is 260 MB less than what the mesh representations need.
+The finest \acsp{lod} are responsible for 65\% of occupied disk space.
 In Chapter \ref{chap:results_and_discussion} we discuss how dropping this \ac{lod} affects image quality and rendering times.
 
 % Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the surface representation for some models.
-A comparison for some models between two \acsp{lod} and the corresponding surface representation is illustrated in Figure \ref{fig:lods_comparison}.
-\begin{figure}[ht]
+% A comparison for some models between two \acsp{lod} and the corresponding surface representation is illustrated in Figure \ref{fig:lods_comparison}.
+For a few selected models, we compare two of their \acsp{lod} with the surface representation in Figure \ref{fig:lods_comparison}.
+\begin{figure}[t]
     \begin{center}
         \begin{minipage}[c]{0.24\textwidth}
             \begin{flushleft}
@@ -207,15 +217,20 @@ A comparison for some models between two \acsp{lod} and the corresponding surfac
 \section{Scene Generation}
 \label{sec:scene_generation}
 We implement the scene generator in Python.
-It uses the volume metadata that is exported during filtering and generates a circular forest with uniformly distributed trees.
+It uses the volume metadata that is exported during filtering and generates a circular forest region with uniformly distributed trees.
 Our generator uses a rejection sampling approach, rejecting samples that are too close to another.
 It is similar to a Poisson disk sampler \cite{poisson_sampling}, however it uses varying spacing between the samples depending on the model size.
-Therefore, we exported the bounding box sizes of the volumes during filtering.
+To this end, we exported the bounding box sizes of the volumes during filtering.
 
-First, we identify the largest bounding box for each model.
+A preparatory step for the scene generation is the classifiction of the tree models into the class \textit{Large}, \textit{Medium} or \textit{Small}.
+We assign trees that grow 20-35 meters to the class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
+This allows us to control the age of the forest.
+For example, if we want an old forest, we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
+
+In the scene generator we first identify the largest bounding box for each model.
 Differences in the bounding box size of a model can occur, because during filtering we make sure that the mesh is fully enclosed by voxels for a given voxel size.
 This effect is visualized in Figure \ref{fig:bounding_sizes}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
@@ -232,11 +247,8 @@ This effect is visualized in Figure \ref{fig:bounding_sizes}.
 	\caption[Bounding boxes resulting from different sized voxels]{The volume is always aligned to one side of the mesh. If we have different sized voxels (like \acsp{lod} necessarily have) the volume overlaps on one side and the bounding box sizes differ.}
 	\label{fig:bounding_sizes}
 \end{figure}
-Then we sample a class \textit{Large}, \textit{Medium}, \textit{Small}, which contain tree models in the corresponding sizes.
-We assign trees that grow 20-35 meters to the class \textit{Large}, trees that reach 10-20 meters are labeled as \textit{Medium} and trees that are smaller than 10 meters are assigned to the \textit{Small} class.
-This allows us to control the age of the forest.
-For example, if we want an old forest, we increase the probability for class \textit{Large} and if we want a rather young forest we increase the probability for \textit{Small} trees.
-We then choose a tree from this class, sample a position in the circle and check whether it collides with existing models.
+Then, we sample a class \textit{Large}, \textit{Medium} or \textit{Small} and choose a tree from this class.
+Next, a position in the circle is sampled and we check whether it collides with existing models.
 This step is a significant performance bottleneck for all rejection-based sampling procedures.
 In our case we need 100000 sample positions to generate a scene with only 9924 trees.
 For all of these sampled positions we have to test whether the models overlap.
@@ -247,7 +259,7 @@ This acceleration reduces the scene generation with our Python script to a manag
 
 Having successively sampled an empty place in the circular forest, we still get an overlap if we place a model at this exact position.
 The reason is, that the bounding box of the model might be asymmetrical.
-For example: Consider a bounding box $BB_{min}=(-2.5, -5.0)$, $BB_{max}=(6.0, 10.0)$ and a sampled location $Pos_{center}=(1.5, 3.0)$.
+For example, consider a bounding box $BB_{min}=(-2.5, -5.0)$, $BB_{max}=(6.0, 10.0)$ and a sampled location $Pos_{center}=(1.5, 3.0)$.
 The sampled location gives us the position where the \textit{center} of the bounding box, namely $BB_{center}=(1.75, 2.5)$, has to be located.
 However, all transformation matrices we use operate on the \textit{origin} of the model space.
 Thus, we have to compute the position of the origin in world space using:
@@ -260,7 +272,8 @@ In our example, assuming a scaling of 1, this gives a location for the model of 
 If we generate a ground truth scene, meaning that it contains only mesh models, we can now add the model to the scene, else we now have to determine the appropriate \ac{lod} for the model given the distance to the camera.
 Knowledge of the camera position, gaze direction, the \ac{fov} and the sensor resolution are essential for that.
 Note that a consequence is, that this information is baked into the scene description and moving the camera during rendering leads to a mismatch of the \acp{lod}.
-Generating the scene in the renderer on the fly is currently no option, since this would lead to significantly worse performance of the renderer.
+Generating the scene in the renderer on the fly is currently no option.
+The performane of the renderer would be significantly worse due to the evaluation of the heuristic and the reconstruction of the \ac{bvh}.
 For positions outside the view frustum, we choose the coarsest \ac{lod}, since these are not visible and only participate in indirect lighting.
 If the position is inside the view frustum, we project the eight bounding box vertices of the coarsest volume on the image plane and compute the area of their convex hull using \texttt{scipy.spatial.ConvexHull} \cite{scipy}.
 This gives us the number of pixels that the volume covers on the sensor.
@@ -275,9 +288,9 @@ Another approach is to position a plane at the center of the grid and orient it 
 The number of voxels that this plane intersects would then be a ground truth value for the voxels that we see.
 Evaluating this however, is really expensive since each voxel has to be tested whether it intersects the plane.
 We choose a faster approach that approximates this value and is depicted in Figure \ref{fig:voxel_estimation}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
-    \includegraphics[width=0.3\linewidth]{img/voxel_estimation.png}
+    \includegraphics[width=0.3\linewidth]{img/voxel_estimation.png} % TODO: Color error regions
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
     \caption[Estimation of intersected voxels]{We estimate the number of intersected voxels by shooting two rays which are perpendicular to the camera direction (plane normal). After intersecting them with the bounding box we can construct a rectangle whose area approximates the number of voxels intersected by a plane. The true value is different, since a plane intersecting a cube can produce anything from a triangular to a hexagonal area.}
     \label{fig:voxel_estimation}
@@ -291,9 +304,9 @@ The ground truth value for the number of intersected voxels by a plane can be di
 However, we found that our approach closely approximates the true value.
 Having computed the number of voxels, we can now choose the coarsest \ac{lod} that still fulfills our heuristic and add it to our scene.
 
-As written before, we repeat this procedure 100000 times to get a scene with 9924 trees, which are distributed over a circular area with a radius of 1000 meters.
+As stated before, we repeat this procedure 100000 times to get a scene with 9924 trees, which are distributed over a circular area with a radius of 1000 meters.
 Figure \ref{fig:visualize_lods} shows this scene rendered from the top with colored bounding boxes of the volumes.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.5\linewidth]{img/visualize_lods.jpg}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
@@ -308,16 +321,27 @@ Additionally, we see the frustum of the camera: Within the view frustum we selec
 \label{sec:rendering}
 We render meshes and volumes using path tracing.
 Like our filtering implementation, our path-tracer is also \ac{gpu} accelerated using OptiX \cite{parker_optix}.
-For fast convergence we employ next event estimation and we use importance sampling of the scattering functions and the environment map.
+This framework specifies a number of shaders that are called at different stages of the ray tracing pipeline.
+The most important shaders for our usage are the ray generation shader, the intersection shader and the closest hit shader.
+The authors of OptiX suggest to use the ray generation shader for generating camera rays and the intersection shader for intersecting rays with custom geometry.
+The closest hit shader should be used for shading and tracing further rays \cite{parker_optix}.
+We use the ray generation shader for most computations, including shading.
+Our closest hit shader only reports the location of the hit to the ray generation shader.
+This allowed us to easily build upon an existing renderer, that we previously used in another project.
+However, this approach can have an effect on the render performance.
+In particular, using the ray generation shader instead of the intersection shader for distance sampling in volumes can negatively influence performance.
+
+Our path tracer employs classical methods for variance reduction like next event estimation and we use importance sampling of the scattering functions and the environment map.
 Russian roulette is used to terminate insignificant paths.
 In order to render scenes with many meshes and volumes, we use instancing.
 A certain mesh or volume thus has to occupy \ac{gpu} memory just once and for each usage an instance is created, each with its own model transformation.
 We do the same for textures by loading only textures that differ in their file path.
 Each material then stores a pointer to the memory location of the texture.
 
-Our surfaces use the Lambertian diffuse \cite{lambert} and the Trowbridge-Reitz microfacet \ac{brdf} \cite{trowbridge_reitz}, which is the general form of the GGX \ac{brdf}.
+The surfaces in our renderer use the Lambertian diffuse \cite{lambert} and the Trowbridge-Reitz microfacet \ac{brdf} \cite{trowbridge_reitz}, which is the general form of the GGX \ac{brdf}.
 As Figure \ref{fig:leaf_gloss} shows, real leafs can have a specular gloss, therefore we incorporate a specular \ac{brdf}.
-\begin{figure}[ht]
+Our lighting model is still a crude approximation of the light transport in leafs, but it is a reasonable tradeoff between quality and implementation effort.
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.5\linewidth]{img/leaf_gloss.jpg}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
@@ -326,10 +350,10 @@ As Figure \ref{fig:leaf_gloss} shows, real leafs can have a specular gloss, ther
 \end{figure} 
 The models we use neither have a specular map nor a specular color associated in their materials.
 In order to still achieve the desired look, it is possible to simply set the specular color to white, leading to a loss of structural information in the highlights.
-Using the diffuse texture directly as a specular map results in colored highlights which does not match Figure \ref{fig:leaf_gloss}.
-Therefore we first compute the luminosity of the diffuse texture, which we then use as a specular map.
+Using the diffuse texture directly as a specular map results in colored highlights which does not match the highlights in Figure \ref{fig:leaf_gloss}.
+Therefore, we first compute the luminosity of the diffuse texture, which we then use as a specular map.
 Figure \ref{fig:leaf_renderings} shows renderings of this approach.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.3\linewidth}
         \centering
@@ -351,7 +375,7 @@ It evaluates to values close to one for grazing angles and to one when light hit
 For a layered surface the effect of the diffuse reflection is biggest near perpendicular angles while specular reflection mostly is visible near grazing angles \cite{pbr}.
 We can therefore write our combined \ac{brdf} as:
 \begin{equation*}
-    f(\boldsymbol{x}, \omega_o, \omega_i) = F(|n_{\boldsymbol{x}} \cdot \omega_o|)f_{spec}(\boldsymbol{x}, \omega_o, \omega_i) + (1 - F(|n_{\boldsymbol{x}} \cdot \omega_o|))f_{diff}(\boldsymbol{x}, \omega_o, \omega_i).
+    f(\boldsymbol{x}, \omega_o, \omega_i) = F(n_{\boldsymbol{x}}, \omega_o)f_{spec}(\boldsymbol{x}, \omega_o, \omega_i) + (1 - F(n_{\boldsymbol{x}}, \omega_o))f_{diff}(\boldsymbol{x}, \omega_o, \omega_i).
 \end{equation*}
 
 As described in Section \ref{subsec:solving_beer_lambert_law_in_heterogeneous_media}, we use brick grid by \citeauthor{brick_grid} \cite{brick_grid} to represent the density values of a volume.
@@ -362,13 +386,13 @@ In accordance with our surface rendering, we apply the Fresnel term to weight th
 Because the Fresnel term requires a surface normal, we now use the filtered normal that we also stored in the NanoVDB grid.
 We weight the specular color by $F$ and the diffuse color by $1-F$ to obtain our albedo.
 
-At each sampled interaction in the medium, we sample a new ray direction using the \ac{sggx} phase function.
+At each sampled interaction with the medium, we sample a new ray direction using the \ac{sggx} phase function.
 Again, we use the Fresnel term, this time to get a probability of whether we should sample the diffuse phase function or the specular phase function.
 Both phase functions rely on sampling a microflake normal from the \ac{sggx} \acl{vndf}.
 % In contrast to \citeauthor{sggx} \cite{sggx}, we do not align this microflake normal with the ray direction $\omega_o$, but with the filtered normal $n$.
 In contrast to \citeauthor{sggx} \cite{sggx}, we do not build a coordinate frame around the ray direction $\omega_o$, but we build it around the filtered normal $n$ to transform the microflake normal to world space.
-Figure \ref{fig:tree_normal_maps} illustrates the normals of the mesh in world space and when the microflake normal is transformed with a coordinate frame around the direction $\omega_o$ or the filtered normal.
-\begin{figure}[ht]
+As Figure \ref{fig:tree_normal_maps} illustrates, this is necessary to obtain the same normals as with mesh rendering.
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.3\linewidth}
         \centering
@@ -388,13 +412,13 @@ Figure \ref{fig:tree_normal_maps} illustrates the normals of the mesh in world s
         \caption{}
         % \label{fig:bounding_size_1}
     \end{subfigure}
-    \caption[Visualization of normals with meshes and volumes]{Visualization of the normals of the surface mesh (a), and of volumetric \acsp{lod} when the microflake normal is transformed with a coordinate frame around the direction $\omega_o$ (b) and when it is transformed with a coordinate frame around the filtered normal (c).
+    \caption[Visualization of normals with meshes and volumes]{Visualization of the normals of the surface mesh (a), volumetric \acsp{lod} when the microflake normal is transformed with a coordinate frame around the direction $\omega_o$ (b) and when it is transformed with a coordinate frame around the filtered normal (c).
              Although being blurrier, transforming the microflake normal based on the filtered normal gives close results to the true normals.}
 	\label{fig:tree_normal_maps}
 \end{figure}
-It is obvious, that transforming the microflake normal based on the outgoing direction $\omega_o$ gives different normals than the normals given by the mesh.
-Transforming the microflake normal with a coordinate frame around the filtered normal gives normals that are distributed around the filtered normal.
+However, transforming the microflake normal based on the outgoing direction $\omega_o$ gives different normals than the normals given by the mesh.
 
 Having sampled a reflection direction in the volume, we move the origin of the new ray along this direction to the edge of the current voxel.
 This is an idea by \citeauthor{vicini2021non} that prevents multiple scattering within a voxel \cite{vicini2021non}.
-According to the authors multiple scattering can lead to paths passing through a voxel with a high density, which leads to an energy loss producing substantially darker looking volumes \cite{vicini2021non}.
+According to the authors multiple scattering can lead to paths passing through a voxel with a high density, which leads to an energy loss producing substantially darker looking volumes.
+Offsetting the ray reduces this effect, but it can introduce new errors when the voxels are large, since the ray's transmittance is not attenuated for the length of the offset \cite{vicini2021non}.

@@ -54,3 +54,16 @@ if __name__ == "__main__":
     ])
     flip_errors = flip_errors.T
     output_heatmap(flip_errors, "../img/results/flip_errors.png", lambda v: f"{round(v, 3)}")
+
+    memory_usage = np.array([
+        [25313394220,	15800181572,	13838601432,	13221115556],
+        [33747325320,	17609198796,	14547503528,	13481128892],
+        [75977933728,	28628064896,	19712652268,	15985333368],
+        [2.51182E+11,	72522463720,	39657688724,	27540318764],
+        [6.03393E+11,	2.29787E+11,	1.07193E+11,	66986445872],
+        [6.38967E+11,	5.71435E+11,	3.41051E+11,	2.01218E+11],
+        [6.38967E+11,	6.36826E+11,	6.13289E+11,	4.91033E+11]
+    ])
+    memory_usage /= 1e+9
+    memory_usage = memory_usage.T
+    output_heatmap(memory_usage, "../img/results/memory_usage.png", lambda v: f"{round(v)} GB")

@@ -28,59 +28,60 @@ The key property of physically based approaches is the conservation of energy wh
     \label{eq:render_equation}
     L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \int_{\mathcal{H}^2} f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_{\boldsymbol{x}} \cdot w_i| d\omega_i.
 \end{equation}
-It states that the radiance at a point $\boldsymbol{x}$ in direction $\omega_o$ is given by the emitted radiance at this point plus the integral over the hemisphere $\mathcal{H}^2$ of the \ac{brdf} $f$ times the emitted radiance $L$ of a light source at point $\boldsymbol{y}$ in direction $\omega_i$ times the absolute value of the dot product between the normal $n_{\boldsymbol{x}}$ and the incident direction $\omega_i$.
+It states that the radiance at a point $\boldsymbol{x}$ in direction $\omega_o$ is given by the emitted radiance at this point plus the integral over the hemisphere $\mathcal{H}^2$ of the \ac{brdf} $f$ times the radiance $L$ coming from a point $\boldsymbol{y}$ in direction $\omega_i$ times the absolute value of the dot product between the normal $n_{\boldsymbol{x}}$ and the incident direction $\omega_i$.
 Since this equation is generally not analytically solvable, we use Monte Carlo integration to solve it numerically.
 For that we have to replace the integral by a sum and divide each summand by the number of summands and by the probability of creating a sample $i$ \cite{pbr}:
 \begin{equation*}
     L(\boldsymbol{x}, \omega_o) = L_e(\boldsymbol{x}, \omega_o) + \frac{1}{N}\sum_{i=1}^{N} \frac{f(\boldsymbol{x}, \omega_o, \omega_i) L(\boldsymbol{y}, -\omega_i) |n_{\boldsymbol{x}} \cdot w_i|}{p(\omega_i)}.
 \end{equation*}
-The recursive nature of this equation can be observed immediately as we could substitute the radiance $L$ in the sum by the whole equation.
-However, implementing an algorithm in this way is infeasible since that would lead to an exponential growth in the compute time and memory consumption with the recursion depth.
+The recursive nature of this equation can be observed immediately, as we could substitute the radiance $L$ in the sum by the whole equation.
+However, implementing the algorithm this way is infeasible since that would lead to exponential growth of compute time and memory consumption with recursion depth.
 As a solution to this problem \citeauthor{rendering_equation} proposed the \textit{path tracing} algorithm \cite{rendering_equation}.
-Instead of sampling $N$ new directions at each point of intersecting the geometry, we sample a single direction at each intersection point starting at the camera until we hit a light source \cite{rendering_equation}.
-Conceptually the recursive approach spans up a ray tree \cite{rendering_equation}.
-In this tree the root represents the camera, a new level is added at each point of reflection and the leafs are light hits \cite{rendering_equation}.
+Instead of sampling $N$ new directions at each point of intersecting the geometry, we sample a single direction at each intersection point starting at the camera until we hit a light source.
+Conceptually the recursive approach spans up a ray tree.
+In this tree the root represents the camera, a new level is added at each point of reflection and the leafs are light hits.
 Path tracing then only samples one path from the root to a light source in this tree \cite{rendering_equation}.
-Sampling only one path leads to a high variance, but when we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
-Additionally, there are methods to reduce the variance of a path like importance sampling or next event estimation.
+Sampling only one path is a bad estimate of the integral, but when we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
+Additionally, there are methods to reduce the variance of the paths like importance sampling or next event estimation.
 In short, importance sampling reduces variance by sampling from a distribution that has a similar shape like the integrand of Equation \ref{eq:render_equation} \cite{rendering_equation}.
 Next event estimation, on the other hand, computes the direct illumination from a light source at each path vertex \cite{pbr}.
 \citeauthor{pbr} provide detailed explanations of these techniques \cite{pbr}.
 
 \section{Volumetric Path Tracing}
-Since we want to represent our \acsp{lod} by volumes, the following chapter introduces how path tracing can be extended to volumes.
-Volumes are three dimensional regions of space that are not vacuum and therefore have a density ${\rho > \SI{0}{\frac{1}{\m^3}}}$ \cite{pbr}.
+The rendering equation introduced in Equation \ref{eq:render_equation} is only valid for light transport in a vacuum.
+Since we want to represent our \acsp{lod} by volumes, we now extend this formulation to be able to render heterogeneous volumes.
+Formally, volumes have a density ${\rho > \SI{0}{\frac{1}{\m^3}}}$ \cite{pbr}.
 Thus, $\rho$ gives us the number of particles in a unit volume \cite{novak_overview}.
-We store the density values at discrete positions, which are called \textit{voxels} \cite{pbr}.
+We store the density values at discrete regions of space, which are called \textit{voxels} \cite{pbr}.
 These voxels can then be arranged in three dimensional grids \cite{pbr}.
-Although it is conceptually helpful to think of volumes as these \textit{dense grids} it leads to inefficient memory representations, since vacuum regions still must be stored.
-For example, if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx \SI{48}{\%}$ of the voxels will store a density of zero.
+Although it is conceptually helpful to think of volumes as these \textit{dense grids} it leads to redundant memory, since vacuum regions must still be stored.
+For example, if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = 1 - \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx \SI{48}{\%}$ of the voxels will store a density of zero.
 Therefore, we would like to store relevant values only, which is called a \textit{sparse grid}.
 \citeauthor{museth_vdb} uses this approach in the OpenVDB library and stores the grid in a B+tree \cite{museth_vdb}.
-For fast traversal, leafs and internal nodes still use dense arrays but the root node is represented by a hash table to allow for a dynamic number of voxels \cite{museth_vdb}.
+For fast traversal, leafs and internal nodes still use dense arrays but the root node is represented by a hash table to allow for a dynamic number of voxels.
 Compared to the dense grid, the background value is just stored once in the root node \cite{museth_vdb}.
-A \ac{gpu} compatible porting of OpenVDB is NanoVDB \cite{museth_nanovdb}.
-It removes third-party dependencies of OpenVDB and is designed as a header-only library \cite{museth_nanovdb}.
-In memory the hierarchical tree is represented continuously without any pointers, which allows for fast copying between \ac{cpu} and \ac{gpu} \cite{museth_nanovdb}.
+A \ac{gpu} compatible port of OpenVDB is NanoVDB.
+It removes third-party dependencies of OpenVDB and is designed as a header-only library.
+In memory, the hierarchical tree is represented continuously without any pointers, which allows for fast copying between \ac{cpu} and \ac{gpu} and cache-friendly traversal on the \ac{gpu} \cite{museth_nanovdb}.
 
 \subsection{Theory of Light Propagation in Participating Media}
 \label{subsec:theory_of_light_propagation_in_participating_media}
-For volumes, the radiance along a ray is determined by the in- and out-scattering as well as the emission and absorption properties of the medium as visualized in Figure \ref{fig:novak_volume_effects} \cite{novak_overview}.
-\begin{figure}[ht]
+For volumes, the radiance along a ray is determined by the in- and out-scattering as well as the emission and absorption properties of the medium as visualized in Figure \ref{fig:novak_volume_effects}.
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.7\linewidth]{img/novak_volume_effects.png}
-    \caption[Physical effects in a volume]{The physical effects that are modeled by the \textit{radiative transfer equation} (Image from \cite{novak_overview}).}
+    \caption[Physical effects in a volume]{The physical effects that are modeled by the \textit{radiative transfer equation}. \textit{Absorption} and \textit{our-scattering} reduce the radiance along a ray, \textit{in-scattering} and \textit{emission} increase the radiance (Image from \cite{novak_overview}).}
     \label{fig:novak_volume_effects}
 \end{figure}
-These effects are quantified by the \textit{scattering coefficient} $\mu_s$ and the \textit{absorption coefficient} $\mu_a$ \cite{novak_overview}.
-The sum of $\mu_s$ and $\mu_a$ is called the \textit{extinction coefficient} $\mu_t=\mu_a + \mu_s$ and accounts for either of the effects \cite{novak_overview}.
-These coefficients are related with the density $\rho$ by the \textit{cross-sectional areas} $\sigma$ of the particles, thus for the scattering coefficient we have: $\mu_s = \rho \sigma_s$ \cite{novak_overview}.
+These effects are quantified by the \textit{scattering coefficient} $\mu_s$ and the \textit{absorption coefficient} $\mu_a$.
+The sum of $\mu_s$ and $\mu_a$ is called the \textit{extinction coefficient} $\mu_t=\mu_a + \mu_s$, and accounts for either of the effects.
+These coefficients are related with the density $\rho$ by the \textit{cross-sectional areas} $\sigma$ of the particles, thus for the scattering coefficient we have: $\mu_s = \rho \sigma_s$.
 We can further define the fraction of photons that scatter as the \textit{albedo} $\alpha=\frac{\mu_s}{\mu_t}$ \cite{novak_overview}.
 With the integral form of the \textit{radiative transfer equation}, we have a way to formalize the scattering, emission and absorption of the medium \cite{novak_overview}:
 \begin{equation}
     \begin{split}
         \label{eq:radiative_transfer}
-        L(\boldsymbol{x}, \omega_o) = \int_0^\infty T(t)[\mu_a(\boldsymbol{y})L_e(\boldsymbol{y}, \omega_o) + \mu_s(\boldsymbol{y})L_s(\boldsymbol{y}, \omega_o)]dy & \;\text{with}\; \boldsymbol{y}=\boldsymbol{x} - y\omega_o \\
+        L(\boldsymbol{x}, \omega_o) = \int_0^\infty T(t)[\mu_a(\boldsymbol{y})L_e(\boldsymbol{y}, \omega_o) + \mu_s(\boldsymbol{y})L_s(\boldsymbol{y}, \omega_o)]dy & \;\text{with}\; \boldsymbol{y}=\boldsymbol{x} + y\omega_o \\
                                                                                                                                                                     & \;\text{and}\; t=||\boldsymbol{x}-\boldsymbol{y}||.
     \end{split}
 \end{equation}
@@ -93,7 +94,7 @@ $T$ denotes the transmittance over the distance $t$ (Beer-Lambert law \cite{lamb
 % \end{minipage}
 \begin{equation}
     \label{eq:beer_lambert_law}
-    T(t) = e^{-\int_0^t \mu_t(\boldsymbol{x} - s\omega_o)ds},
+    T(t) = e^{-\int_0^t \mu_t(\boldsymbol{x} + s\omega_o)ds},
 \end{equation}
 \begin{equation}
     \label{eq:in_scattered_radiance}
@@ -101,17 +102,17 @@ $T$ denotes the transmittance over the distance $t$ (Beer-Lambert law \cite{lamb
 \end{equation}
 $f_p$ is called the \textit{phase function} and will be explained in Section \ref{subsec:phase_function}.
 
-Now that we defined how light propagates in a medium, we can combine the formulation in Equation \ref{eq:radiative_transfer} with the surface formulation from equation \ref{eq:render_equation}.
-We therefore clip the upper integration bound of equation \ref{eq:radiative_transfer} to a distance $z$ and add the attenuated surface term \cite{novak_overview}:
+Now that we defined how light propagates in a medium, we can combine the formulation in Equation \ref{eq:radiative_transfer} with the surface formulation from Equation \ref{eq:render_equation}.
+We therefore clip the upper integration bound of Equation \ref{eq:radiative_transfer} to a distance $z$ and add the attenuated surface term \cite{novak_overview}:
 \begin{equation*}
     L(\boldsymbol{x}, \omega_o) = \int_0^z T(\boldsymbol{x}, \boldsymbol{y})[\mu_a(\boldsymbol{y})L_e(\boldsymbol{y}, \omega_o) + \mu_s(\boldsymbol{y})L_s(\boldsymbol{y}, \omega_o)]dy + T(\boldsymbol{x}, \boldsymbol{z})L(\boldsymbol{z}, \omega_o).
 \end{equation*}
-The idea of this \textit{volume rendering equation} is that a ray passing through a medium will hit a surface at distance $z$ \cite{novak_overview}.
-The first part on the right side of this equation accounts for the in-scattering and emission of the medium while the second part represents absorbed or out-scattered radiance from the surface at distance $z$ \cite{novak_overview}.
+The idea of this \textit{volume rendering equation} is that a ray passing through a medium will hit a surface at distance $z$.
+The integral on the right side of this equation accounts for the in-scattering and emission of the medium while the added term represents attenuated radiance arriving from the surface at distance $z$ \cite{novak_overview}.
 
 \subsection{Solving the Beer-Lambert Law in Heterogeneous Media}
 \label{subsec:solving_beer_lambert_law_in_heterogeneous_media}
-As described in Section \ref{subsec:theory_of_light_propagation_in_participating_media} effects like scattering and absorption occur when light interacts with the particles of a medium.
+As described in Section \ref{subsec:theory_of_light_propagation_in_participating_media}, effects like scattering and absorption occur when light interacts with the particles of a medium.
 We therefore need a way to sample interactions on which the light then is scattered or absorbed.
 At distance $t$, the Beer-Lambert law from Equation \ref{eq:beer_lambert_law} gives us the proportion of light that did not hit a particle $P(X > t) = T(t)$ \cite{novak_overview}.
 Therefore, we can compute the fraction of light that hit a particle by \cite{novak_overview}:
@@ -130,35 +131,35 @@ After rearranging, this gives us a method to sample free path distances in homog
 \end{equation}
 where $\xi$ is a uniform random number in the interval $[0, 1)$ \cite{novak_overview}.
 
-However, distance sampling in heterogeneous media is more complex, since $\mu_t$ is no longer constant.
-We could interpret each voxel as a homogeneous medium and sample a target transmittance in the interval $(0, 1]$ \cite{novak_overview}.
+However, distance sampling in heterogeneous media is more complex, since $\mu_t$ is spatially varying.
+We could interpret each voxel as a homogeneous medium and sample a target transmittance in the interval $(0, 1]$.
 We then have to accumulate the transmittance over all voxels that a ray passes until it falls below the target transmittance \cite{novak_overview}.
 This method is called \textit{regular tracking} \cite{sutton_regular_tracking}.
-The drawback is, that we have to compute intersections with the voxels which can be expensive for detailed volumes \cite{novak_overview}.
+The drawback is, that we have to compute intersections with every voxel along the ray which can be expensive for detailed volumes \cite{novak_overview}.
 Another approach is called \textit{ray marching} \cite{perlin_hypertexture}, where we traverse the medium at a constant step size.
-Again, we accumulate the transmittance until it falls below a sampled target transmittance \cite{novak_overview}.
+Again, we accumulate the transmittance until it falls below a sampled target transmittance.
 This method can reduce the cost compared to regular tracking but introduces bias, since it assumes a constant density between each step \cite{novak_overview}.
 An unbiased approach that does not require intersection tests with voxels is \textit{Woodcock tracking} \cite{woodcock}, usually called \textit{delta tracking}.
 Figure \ref{fig:novak_distance_sampling} visualizes all tree approaches.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.7\linewidth]{img/novak_distance_sampling.png}
     \caption[Approaches for distance sampling in heterogeneous media]{Three approaches for distance sampling in heterogeneous media: Regular tracking gives exact results but requires intersections with voxel boundaries. Ray marching can reduce compute time but introduces a bias. For delta tracking we add fictious matter (red circles) to obtain a homogeneous medium and get an unbiased result (Image from \cite{novak_overview}).}
     \label{fig:novak_distance_sampling}
 \end{figure}
-We first have to homogenize the medium by adding fictious matter until the extinction reaches the majorant of the real matter $\bar{\mu_t}$ \cite{novak_overview}.
+We first have to homogenize the medium by adding fictious matter until the extinction reaches the majorant of the real matter $\bar{\mu_t}$.
 This fictious matter does not influence the scattering or absorption behavior \cite{novak_overview}.
-We can then iteratively sample new distances using Equation \ref{eq:distance_sampling} with $\mu_t=\bar{\mu_t}$ and compare the local extinction coefficient $\mu_t(\boldsymbol{x})$ with the majorant $\bar{\mu_t}$ using a uniform random number $\xi\in[0,1)$ \cite{spectral_and_decomposition_tracking}.
-If $\xi<\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a hit with a particle and can exit the iteration, if $\xi>=\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a null-collision meaning that we have to continue with sampling a new distance $t$ \cite{spectral_and_decomposition_tracking}.
+We can then iteratively sample new distances using Equation \ref{eq:distance_sampling} with $\mu_t=\bar{\mu_t}$ and compare the local extinction coefficient $\mu_t(\boldsymbol{x})$ with the majorant $\bar{\mu_t}$ using a uniform random number $\xi\in[0,1)$.
+If $\xi<\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a hit with a real particle and can exit the iteration, if $\xi>=\frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}}$ we found a collision with a null particle meaning that we have to continue with sampling a new distance $t$ \cite{spectral_and_decomposition_tracking}.
 Note, that for a constant cross-sectional area $\sigma_t$ we can use the ratio between the local density $\rho(\boldsymbol{x})$ and the density majorant $\bar{\rho}$ instead.
-To estimate the transmittance in a heterogeneous medium we employ a similar algorithm called \textit{ratio tracking} \cite{novak_ratio_tracking}.
-As opposed to delta tracking, ratio tracking does not compare whether the interaction is a null-collision \cite{novak_ratio_tracking}.
+To estimate the transmittance in a heterogeneous medium we employ a similar algorithm called \textit{ratio tracking}.
+As opposed to delta tracking, ratio tracking does not compare whether the interaction is a null-collision.
 Instead, it updates the transmission with $T_{new} = T_{old}(1 - \frac{\mu_t(\boldsymbol{x})}{\bar{\mu_t}})$ \cite{novak_ratio_tracking}.
 
 Since both algorithms use a global majorant of the extinction, they perform poorly in media where the extinction varies strongly across the medium.
 Therefore, we use local majorants as suggested by \citeauthor{brick_grid} \cite{brick_grid}.
 This idea is visualized in Figure \ref{fig:brick_grid_majorants}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.9\linewidth]{img/brick_grid_majorants.png}
     \caption[Visualization of local density majorants]{Visualization of the concept of local majorants. These allow to sample distances and estimate transmittance more efficiently (Image from \cite{brick_grid}).}
@@ -175,7 +176,7 @@ Since the resulting atlas texture no longer has spatial coherence, hardware inte
 Therefore, we employ a form of stochastic lookup where we jitter the lookup point by $\pm0.5$ voxels before performing point sampling \cite{brick_grid}.
 When having a large number of lookups, as it is the case in Monte Carlo integration, this procedure is equivalent to trilinear interpolation without introducing a significant overhead \cite{brick_grid}.
 In Figure \ref{fig:brick_grid_datastructure} we show the introduced textures visually.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.9\linewidth]{img/brick_grid_datastructure.png}
     \caption[Data structure of brick grid]{Visualization of the internal data structure of brick grid. It uses a range texture, containing minorants and majorants and an indirection texture which links world positions to the density values in the atlas texture (Image from \cite{brick_grid}).}
@@ -195,8 +196,9 @@ This is repeated until a distance is successfully sampled, the transmittance est
 \label{subsec:phase_function}
 In Equation \ref{eq:in_scattered_radiance} the term of a \textit{phase function} was already introduced.
 Now we want to explain this concept in more detail.
-Similar like a \acs{brdf} gives the amount of light scattered into a certain direction on a surface, a phase function gives this amount in a volume when an interaction with a particle occurs \cite{novak_overview}.
-As opposed to \acsp{brdf}, phase functions are normalized when they are integrated over the unit sphere $\mathcal{S}^2$, therefore they can be seen as \acsp{pdf} as well \cite{pbr}.
+% Similar like a \acs{brdf} gives the amount of light scattered into a certain direction on a surface, a phase function gives this amount in a volume when an interaction with a particle occurs \cite{novak_overview}.
+Analogous to how how the \ac{brdf} describes how light is scattered when interacting with a surface, the phase function models how light scatters when an interaction with a particle occurs \cite{novak_overview}.
+Opposed to \acsp{brdf}, phase functions are normalized over the unit sphere $\mathcal{S}^2$, therefore they can be seen as \acsp{pdf} as well \cite{pbr}.
 For the isotropic case, meaning that light is scattered in all directions with equal probability, we can ensure the normalization by dividing with the integration domain, which is $4\pi$ for the unit sphere \cite{pbr}.
 This gives us the isotropic phase function \cite{novak_overview}:
 \begin{equation*}
@@ -204,11 +206,11 @@ This gives us the isotropic phase function \cite{novak_overview}:
 \end{equation*}
 As it can be seen the function has a constant value for all directions $\omega_o$, $\omega_i$ on the unit sphere \cite{novak_overview}.
 
-Since we want our \acp{lod} to look similar like the corresponding mesh representation, an isotropic phase function is not sufficient.
+Since we want our \acp{lod} to look similar to the corresponding mesh representation, an isotropic phase function is not sufficient.
 Instead, we choose the \acs{sggx} phase function \cite{sggx} because it provides scattering properties that match diffuse and specular \acsp{brdf}.
-Particularly it is similar to microfacet models like the GGX \acs{brdf} \cite{ggx} which also led to the name \acf{sggx} \cite{sggx}.
+It is particularly similar to microfacet models like the GGX \acs{brdf} \cite{ggx} which also led to the name \acf{sggx} \cite{sggx}.
 The idea behind the GGX \ac{brdf} and other microfacet models is that a surface can be modeled by a distribution of normals which describe the roughness of the surface at a certain point \cite{ggx}.
-Expanding on this idea \citeauthor{microflake} \cite{microflake} introduced the microflake framework which models the medium as two-sided specularly reflecting flakes which are distributed according to a certain \ac{ndf}.
+Expanding on this idea, \citeauthor{microflake} \cite{microflake} introduced the microflake framework which models the medium as two-sided specularly reflecting flakes which are distributed according to a certain \ac{ndf}.
 \citeauthor{sggx} \cite{sggx} define the \ac{ndf} for the SGGX phase function as:
 \begin{equation*}
     D(\omega_m)=\frac{1}{\pi \sqrt{|S|}(\omega_m^T S^{-1} \omega_m)^2},
@@ -220,7 +222,7 @@ This matrix is computed from the GGX roughness value $\alpha$ and the normal $n$
 \end{equation*}
 where $x$, $y$, $z$ are the components of the normal $n$ \cite{sggx}.
 The \ac{ndf} $D(\omega_m)$ can be seen as the extension of the GGX \acs{ndf} to the negative hemisphere as Figure \ref{fig:sggx_ndf} shows.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
@@ -240,13 +242,13 @@ The \ac{ndf} $D(\omega_m)$ can be seen as the extension of the GGX \acs{ndf} to 
 Based on the \acs{ndf} the authors then introduce a \ac{vndf} $D_{\omega_o}(\omega_m)$ which is used for importance sampling of the phase function, since it further reduces variance compared to the \acs{ndf} \cite{vndf_importance_sampling}.
 Another important concept in the microflake framework is the projected area $\sigma(\omega_o)$ of the microflakes.
 As depicted in Figure \ref{fig:sggx_projected_area}, this is the area of the microflakes when projected onto a plane in direction $\omega_o$ \cite{sggx}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=0.3\linewidth]{img/sggx_projected_area.jpg}
     \caption[Illustration of the microflake projected area]{Illustration of the microflake projected area $\sigma(\omega_o)$, which is the area on a plane on which the microflakes are projected (Image from \cite{sggx}, with modification of the annotations).}
     \label{fig:sggx_projected_area}
 \end{figure}
-For the SGGX phase function the projected area is defined as \cite{sggx}:
+For the SGGX phase function the projected area is defined as:
 \begin{equation}
     \label{eq:projected_area}
     \sigma(\omega_o)=\int_{\mathcal{S}^2} \langle \omega_o, \omega_m \rangle D(\omega_m) d\omega_m = \sqrt{\omega_o^T S \omega_o},
@@ -266,26 +268,26 @@ $f{}^{diff}_p$ can then be importance sampled by generating a direction $\omega_
 
 \section{Transforming Meshes into Volumes}
 \label{sec:transforming_meshes_into_volumes}
-For generating \acp{lod} we need to transform the mesh representation into volumes.
+For generating \acp{lod} we need to transform the mesh representation into a volumetric representation.
 We refer to this process as filtering.
 % We follow the approach by \citeauthor{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
 We follow a similar approach as \citeauthor{hybrid_mesh_volume_lods} and use ray casting to estimate the density for each voxel \cite{hybrid_mesh_volume_lods}.
 Our deviations from their approach are discussed in Section \ref{sec:mesh_filtering}.
-To sample ray origins the authors use a \ac{pdf} $D_i=D_i^{cube} \ast D^{smooth}$ around the voxel center \cite{hybrid_mesh_volume_lods}.
-$D_i^{cube}$ is a cubic uniform \ac{pdf} around the center of voxel $i$ and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
-The length of the rays is set to the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
+To sample ray origins the authors use a \ac{pdf} $D_i=D_i^{cube} \ast D^{smooth}$ around the voxel center.
+$D_i^{cube}$ is a cubic uniform \ac{pdf} around the center of voxel $i$ and $D^{smooth}$ is a 3D gaussian function with the standard deviation of 0.6 times the length of the voxel edge.
+The length of the rays is set to the length of the voxel edge.
 Each ray is intersected with the micro-geometry \cite{hybrid_mesh_volume_lods}.
 The number of hits and the total number of rays casted determine the occlusion probability \cite{hybrid_mesh_volume_lods}:
 \begin{equation*}
     P_{occ}=\frac{nbHits}{nbRays}.
 \end{equation*}
-Since a medium is defined on the density $\rho$ the authors solve the integral \cite{hybrid_mesh_volume_lods}:
+Since a medium is defined on the density $\rho$ the authors solve the integral:
 \begin{equation}
-    1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho\sigma(\omega)ray_l} d\omega = P_{occ}
+    1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho \, \sigma(\omega) \, ray_l} d\omega = P_{occ}
     \label{eq:loubet_filtering_equation}
 \end{equation}
 for $\rho$ \cite{hybrid_mesh_volume_lods}.
-$\sigma_u(\omega)$ is the microflake projected area as defined in Equation \ref{eq:projected_area} and $ray_l$ is again the length of the voxel edge \cite{hybrid_mesh_volume_lods}.
+$\sigma_u(\omega)$ is the microflake projected area as defined in Equation \ref{eq:projected_area} and $ray_l$ is again the length of the voxel edge.
 This equation cannot be solved analytically for the density and therefore requires gradient descent based optimization \cite{hybrid_mesh_volume_lods}.
 
 

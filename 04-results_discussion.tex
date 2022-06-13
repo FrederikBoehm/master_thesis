@@ -1,20 +1,21 @@
 \chapter{Results and Discussion}
 \label{chap:results_and_discussion}
-This chapter will present the results of the thesis and discusses possible limitations of our approach.
+This chapter will present the results of the thesis and it discusses the limitations of our approach.
 As mentioned before, we are interested in a sensible tradeoff between a performance improvement and a good image quality.
 We therefore measure the render time of our \ac{lod} approach and the mesh ground truth.
 The image quality is mainly determined by comparing the results visually to the ground truth, but we also provide the mean \FLIP \cite{flip} error to quantify the difference.
 We choose this error because it gives a good approximation of the difference a human perceives when alternating between two images \cite{flip}.
-For the sake of completeness, we also provide the mean \ac{ssim} and the \ac{psnr} in Appendix \ref{sec:psnr_and_ssim_errors}.
+For the sake of completeness, we also provide the mean \ac{ssim} and the \ac{psnr} in Appendix \ref{chap:psnr_and_ssim_errors}.
 All images are rendered in our custom physically based path-tracer that we introduced in Section \ref{sec:rendering}.
 We run the renderer on a system with an Intel Xeon E3-1230 v3 \ac{cpu}, 16 GB of RAM and a NVIDIA GeForce RTX 3060 \ac{gpu}.
-We performed experiments on the forest scene, which we present in Section \ref{sec:experiments_on_the_forest_scene} and on single model instances, which we discuss in Section \ref{sec:experiments_on_single_model_instances}.
+We performed experiments on the forest scene with 9924 trees, which we present in Section \ref{sec:forest} and on single model instances, which we discuss in Section \ref{sec:experiments_on_single_model_instances}.
+For the forest scene, we additionally analyze the memory usage, when using \acsp{lod}.
 
 \section{Experiments on the Forest Scene}
-\label{sec:experiments_on_the_forest_scene}
-As we explained in Section \ref{sec:scene_generation} we choose our \acsp{lod} based on the heuristic that one voxel covers at most one pixel.
-Therefore Figure \ref{fig:render_comparison} shows a rendering of a scene that was generated with this heuristic compared to a reference rendering that uses only meshes.
-\begin{figure}[ht]
+\label{sec:forest}
+As we explained, in Section \ref{sec:scene_generation} we choose our \acsp{lod} based on the heuristic that one voxel covers at most one pixel.
+Figure \ref{fig:render_comparison} shows a rendering of a scene that was generated with this heuristic compared to a reference rendering that uses only meshes.
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{\linewidth}
         \resizebox{\textwidth}{!}{%
@@ -45,15 +46,16 @@ Therefore Figure \ref{fig:render_comparison} shows a rendering of a scene that w
 	\caption[Comparison between mesh and volume renderings of the forest]{(a) is the reference image rendered in $\SI{5463}{\s}$ with 1024 samples per pixel using only mesh representations, (b) uses \acsp{lod} if a voxel is smaller than a pixel and took $\SI{8723}{\s}$ to render with 1024 samples per pixel.}
 	\label{fig:render_comparison}
 \end{figure}
-It can be observed that the structure respectively the details of the \acs{lod} trees cannot be distinguished from the mesh representations which speaks for our heuristic for \ac{lod} selection.
+It can be observed that the structure of the volumetric trees cannot be distinguished from the mesh representations which speaks for our heuristic for \ac{lod} selection.
 However, when we look at the yellow framed image segment, we see that the shading differs between both representations.
 The volumetric trees generally look darker, which is especially pronounced on the side that faces the sun.
+For our usage, the ray offsetting, that we introduced in Section \ref{sec:rendering}, showed only neglectable improvement of the shading.
 In the magenta framed image segment, we can additionally see that a mesh is replaced by a volume, although it is clearly too close to the camera for the regular distance dependent \ac{lod} selection.
 This is quite literally an edge case of our \ac{lod} selection procedure: We only check whether the vertices of the volumetric bounding box are within the view frustum, the edges connecting the vertices can still be visible in the frustum, thus also making the volume visible.
 Unfortunately, we did not catch this shortcoming during development.
 The differences in the cyan framed image segment are quite subtle: The tree in the reference rendering has a slight yellow tint that the \ac{lod} rendering lacks.
-It is easier to see this error if we look at the \FLIP error map between the renderings in Figure \ref{fig:error_map}.
-\begin{figure}[ht]
+It is easier to see this error if we look at the \FLIP error map between the renderings from Figure \ref{fig:render_comparison} in Figure \ref{fig:error_map}.
+\begin{figure}[t]
     \centering
     \resizebox{\textwidth}{!}{%
     \includegraphics[height=4cm]{img/results/flip_error_1A_with_boxes.png}%
@@ -76,7 +78,7 @@ As we observed in the renderings, the error is particularly high on the side tha
 In order to find the reason for the large shading difference on the sun-facing side, we split up the \acsp{brdf} and phase functions into the specular and diffuse component.
 Intuitively we expect that these differences are specular highlights on the surfaces that are not rendered in the volumes.
 However, looking at individual renderings of the diffuse and specular components in Figure \ref{fig:diffuse_specular_breakdown}, we find that these bright regions are in fact a result of the diffuse \ac{brdf}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
@@ -103,7 +105,7 @@ However, looking at individual renderings of the diffuse and specular components
         % \label{fig:render_comparison_lod}
     \end{subfigure}
     % \caption[Comparison between mesh and volume renderings of the forest]{Renderings of the forest using meshes only (a) and using \acsp{lod} if a voxel is smaller than a pixel (b).}
-    \caption[Diffuse and specular components rendered separately]{(a) and (b) show the diffuse respectively specular component of the reference image, (c) and (d) show the diffuse respectively specular component when using \acsp{lod} where a voxel covers at most one pixel. The images are rendered with 32 samples per pixel.}
+    \caption[Diffuse and specular components rendered separately]{(a) and (b) respectively show the diffuse and specular components of the reference image, (c) and (d) respectively show the diffuse and specular components when using \acsp{lod} where a voxel covers at most one pixel. The images are rendered with 32 samples per pixel.}
 	\label{fig:diffuse_specular_breakdown}
 \end{figure}
 In the volumes, the diffuse phase function gives way more uniform looking trees without these bright regions on the sun-facing side.
@@ -111,7 +113,7 @@ The specular component gives discrete specular highlights on the surfaces while 
 So our approach fails in preserving the visual appearance of the meshes.
 We identify two reasons for this limitation: First, the \ac{sggx} phase function is defined on the whole unit sphere (recall Figure \ref{fig:sggx_ndf}), which means that half of the rays are reflected into the medium where they are attenuated, while for surfaces all rays are reflected away from the surface.
 Second, it is likely that this error occurred due to the usage of an isotropic microflake projected area, which directly influences our density values.
-As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$.
+As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$. % TODO: Maybe add example for effect of lowering roughness of leafs
 Using an anisotropic projected area therefore can lead to a significantly different look.
 The filtering procedure however, would become more complex.
 Experiments in this direction are outside of the scope of this thesis.
@@ -129,12 +131,12 @@ Tweaking the distance translates to changing the number of pixels a voxel may co
 As we wrote in Section \ref{sec:scene_generation}, our heuristic currently ensures that a voxel covers at most one pixel.
 Now we relax this restriction and measure render times when a voxel covers 1, 4, 9 or 16 pixels.
 Additionally, we test how changing the voxel size of the finest \ac{lod} affects the performance.
-In the first experiment, the voxels in our finest \ac{lod} had a size of 0.1m.
-Now we choose a minimal voxel size of 0.1m, 0.2m, 0.4m, 0.8m, 1.6m, 3.2m and 6.4m.
-In total this gives us 28 combinations that we have to test.
+In the first experiment, the voxels in our finest \ac{lod} had a size of $\SI{0.1}{\m}$.
+Now we choose a minimal voxel size of $\SI{0.1}{\m}$, $\SI{0.2}{\m}$, $\SI{0.4}{\m}$, $\SI{0.8}{\m}$, $\SI{1.6}{\m}$, $\SI{3.2}{\m}$ and $\SI{6.4}{\m}$.
+In total this gives us 28 combinations.
 % We visualize our measurements in Figure \ref{fig:render_durations} as a heat map.
-In Figure \ref{fig:lod_grid} we visualize the durations as well as the \FLIP error for rendering the different configurations with 32 samples per pixel.
-\begin{figure}[ht]
+In Figure \ref{fig:lod_grid} we visualize the durations as well as the \FLIP error for rendering the different configurations with 1024 samples per pixel.
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
@@ -146,6 +148,7 @@ In Figure \ref{fig:lod_grid} we visualize the durations as well as the \FLIP err
         \centering
         \includegraphics[width=1\linewidth]{img/results/flip_errors.png}
         \caption{}
+        \label{fig:flip_errors}
     \end{subfigure}
 	\caption[Heatmap of the \ac{lod} render durations and \FLIP errors]{Heatmap for render durations (a) and the mean \FLIP error (b) of different combinations of the minimum voxel size and the number of covered pixels. Bright regions indicate high values, dark regions indicate low values.}
 	\label{fig:lod_grid}
@@ -158,7 +161,7 @@ The meshes take longer to render than the rough \acsp{lod}, therefore the render
 We get another view on the different combinations between the number of covered pixels and the minimum voxel size if we visualize the bounding boxes, like we previously did in Figure \ref{fig:visualize_lods}.
 Now we not only show a rendering from above the scene but also from the main camera perspective.
 Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} visualizes the previously described effect, that the distance at which \acsp{lod} are rendered increases, when the minimum voxel size is increased.
-\begin{figure}
+\begin{figure}[t]
     \begin{subfigure}[b]{\linewidth}
         \begin{center}
             \setlength{\tabcolsep}{2pt}
@@ -184,11 +187,11 @@ Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} vi
         \caption{}
         \label{fig:visualize_lods_different_configurations_covered_pixels_fixed}
     \end{subfigure}
-    \caption[Visualization of \acsp{lod} using different configurations]{Debug views of the volume bounding boxes for different configurations. In (a) the minimum voxel size is fixed at $\SI{0.1}{\m}$ and we vary the number of covered pixels, while in (b) the number of covered pixels is fixed at 1 and we vary the minimum voxel size. Blue is again the finest \ac{lod} and red the coarsest \ac{lod}. }
+    \caption[Visualization of \acsp{lod} using different configurations]{Debug views of the volume bounding boxes for different configurations. In (a) the minimum voxel size is fixed at $\SI{0.1}{\m}$ and we vary the number of covered pixels, while in (b) the number of covered pixels is fixed at 1 and we vary the minimum voxel size. Blue is the finest \ac{lod} and red the coarsest \ac{lod}. }
     \label{fig:visualize_lods_different_configurations}
 \end{figure}
 For the case of a fixed number of covered pixels and a minimum voxel size of $\SI{0.8}{\m}$, it is also interesting to note that the distance based \acsp{lod} still cover almost half of the circular forest, although they are barely visible from the main camera's perspective.
-Figure \ref{fig:visualize_lods_different_configurations_min_voxel_size_fixed} on the other hand, is analogous to the first column of Figure \ref{fig:lod_grid_durations} as we also fixed the minimum voxel size at $\SI{0.1}{\m}$ and increase the number of covered pixels.
+Figure \ref{fig:visualize_lods_different_configurations_min_voxel_size_fixed} on the other hand, is analogous to the first column of Figure \ref{fig:lod_grid_durations}, as we also fixed the minimum voxel size at $\SI{0.1}{\m}$ and increase the number of covered pixels.
 The figure intuitively explains the near doubling of the render time between 1 covered pixel and 16 covered pixels, since we start \ac{lod} rendering right in front of the camera for 16 covered pixels.
 
 
@@ -197,7 +200,7 @@ Looking back at Figure \ref{fig:lod_grid}, the overall best result is achieved b
 The scene then renders in $\SI{4549}{\s}$ which is a 17\% improvement over rendering only meshes.
 Additionally, it has the positive side-effect that the shading problem is less noticeable, which is reflected in a drop in the mean \FLIP error from 0.073 to 0.038.
 Figure \ref{fig:render_and_error_fastest} shows this rendering with the corresponding \FLIP error map.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{\linewidth}
         \resizebox{\textwidth}{!}{%
@@ -223,17 +226,38 @@ Figure \ref{fig:render_and_error_fastest} shows this rendering with the correspo
         }
         \caption{}
     \end{subfigure}
-    \caption[Rendering and \FLIP error map of the fastest combination]{(a) shows the fastest rendering, finished in $\SI{4548}{\s}$ for 1024 samples. The scene is generated with a minimum voxel size of 0.8m and up to four covered pixels per voxel. (b) shows the corresponding \FLIP error map against the ground truth. The mean \FLIP error is 0.038.}
+    \caption[Rendering and \FLIP error map of the fastest combination]{(a) shows the fastest configuration, finished in $\SI{4548}{\s}$ for 1024 samples. The scene is generated with a minimum voxel size of $\SI{0.8}{\m}$ and up to four covered pixels per voxel. (b) shows the corresponding \FLIP error map against the ground truth. The mean \FLIP error is 0.038.}
     \label{fig:render_and_error_fastest}
 \end{figure}
-We can further decrease the mean \FLIP error down to 0.031, for example by choosing a minimum voxel size of 6.4 meters and let each voxel cover one pixel, at the cost of a higher render time.
+We can further decrease the mean \FLIP error down to 0.031, for example, by choosing a minimum voxel size of 6.4 meters and let each voxel cover one pixel, at the cost of a higher render time.
+
+The last experiment we perform on the forest scene analyzes the memory consumption of the different configurations of the number of covered pixels and the minimum voxel size.
+Since we use instancing of the geometry, texture and volume grids, the memory footprint between all configurations is roughly the same.
+But we can analyze how much memory is used if we would not use instancing.
+This gives us an idea, how our approach performs regarding memory consumption, if we had many distinct models in the scene, which is typical for feature films.
+This analysis could also be interesting if the scene's assets need to be streamed over a network and the load on the network has to be minimized.
+Due to system limitations, we cannot render such scenes anymore, but it is enough to know the memory usage of each model's \ac{lod} and the distibution of the model's \acsp{lod} in a scene to obtain the total memory consumption.
+Without instancing, the reference scene would consume $\SI{830}{GB}$ of memory.
+As Figure \ref{fig:memory_usage} visualizes in the familiar heatmap, we can reduce this footprint, by choosing any of the different \ac{lod} configurations.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.49\linewidth]{img/results/memory_usage.png}
+    \caption[Visualization of the memory consumption of different scene configurations]{Heatmap of the memory consumptions of different scene configurations when using no instancing. Bright regions indicate low memory usage, dark regions indicate high memory usage.}
+    \label{fig:memory_usage}
+\end{figure}
+It is obvious, that with increasing minimum voxel sizes, the memory usage increases as well.
+However, increasing the number of pixels that a voxel may cover, reduces the memory consumption.
+Comparing Figure \ref{fig:memory_usage} and Figure \ref{fig:flip_errors}, we see that a high memory consumption correlates with a low \FLIP error, while a low memory footprint correlates with a high \FLIP error.
+The memory consumption therefore behaves inverse to the \FLIP error.
+Interestingly, the configuration with the lowest render time from Figure \ref{fig:lod_grid_durations}, does not have the smallest memory footprint.
+We can therefore conclude, that the memory consumption is not the only variable that plays into the render time of a scene.
 
 \section{Experiments on Single Model Instances}
 \label{sec:experiments_on_single_model_instances}
 Now that we have a good idea of the performance and quality implications of our approach, we perform further tests on single instances of some tree models.
 This gives us finer control over which \ac{lod} should be rendered at which distance.
-We use the models \textit{Celtis australis adult} (Figure \ref{fig:EU06a}) and \textit{Acer rubrum adult} (Figure \ref{fig:EA01a}) for our tests.
-\begin{figure}[ht]
+We use the models \textit{Celtis australis adult} (Figure \ref{fig:EU06a}) and \textit{Acer rubrum adult} (Figure \ref{fig:EA01a}) for our tests. % TODO: Maybe use PR04a instead
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
@@ -251,9 +275,9 @@ We use the models \textit{Celtis australis adult} (Figure \ref{fig:EU06a}) and \
 	\label{fig:single_model_instances}
 \end{figure}
 
-The first experiment in this context is, that we render a single instance of all mesh and volume representations at different distances.
+As a first experiment, we render a single instance of all mesh and volume representations at different distances.
 We can see the render times of this experiment plotted in Figure \ref{fig:render_time_comparisons}.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
@@ -277,7 +301,7 @@ An explanation for this could be that at a certain distance the random sampling 
 
 As a second experiment we want to fix the distance between the camera and the model and measure how the image quality in terms of the \FLIP error and render times change when we choose different \acsp{lod}.
 Since the model covers only a small area of the image, we crop the image before we compute the \FLIP error.
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \begin{subfigure}[b]{0.49\linewidth}
         \centering
@@ -298,7 +322,26 @@ We could alternatively draw the plots over the linear \ac{lod} level instead of 
 Regardless of the choice of the abscissa, the plots visualize the tradeoff well that we have to make: We can either improve the performance by choosing rougher \acsp{lod} which leads to a high image error.
 Or we aim for a high image quality by selecting a detailed \ac{lod}, which leads to longer render times.
 Another observation that we made during the single instance rendering is that the approach by \citeauthor{vicini2021non} of offsetting the scattered ray to the voxel border impairs the quality of the representation.
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{img/results/EU06a_6.4.png}
+        \caption{}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+        \centering
+        \includegraphics[width=1\linewidth]{img/results/EA01a_6.4.png}
+        \caption{}
+    \end{subfigure}
+	\caption[Renderings of volumes with a voxel size of $\SI{6.4}{\m}$]{Renderings of the \acsp{lod} with a voxel size of $\SI{6.4}{\m}$ of the model \textit{Celtis australis adult} (a) and \textit{Acer rubrum adult} (b). The voxel borders are visible due to the ray offsetting.}
+	\label{fig:rough_lods}
+\end{figure}
 This is especially pronounced when rough \acsp{lod} are viewed from a close distance.
+Figure \ref{fig:rough_lods} shows the effect of the ray offsetting on the \acsp{lod} with a voxel size of $\SI{6.4}{\m}$.
+The voxel borders are clearly visible in these renderings, since the transmission of a ray is not updated by the offset.
+For close-up renderings of fine \acsp{lod} this artifact is less visible and in landscape scenes, like the forest scene from Section \label{sec:forest_experiments}, we were not able to perceive it.
+
 
 
 

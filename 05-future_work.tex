@@ -1,13 +1,13 @@
 \chapter{Future Work}
 \label{chap:future_work}
-As we discovered, the abilities of our approach to preserve the look of the surface mesh is not satisfactory.
+As we discovered, the abilities of our approach to preserve the look of the surface mesh is limited by the shading of the volumes.
 The next step to improve on this would be to include anisotropic extinction, which would require a rewrite of the filtering procedure and the distance sampling and transmittance estimation.
 The existing volumes would not be compatible with this new approach and had to be re-generated as well.
 
 To further enhance the quality of the renderings, it would be interesting how our volumetric \ac{lod} approach performs with spectral rendering.
-This would improve physical accuracy since the scattering in media is actually wavelength dependent \cite{novak_overview} but it requires a rewrite of the renderer.
-Since this increases the dimension of the rendering equation it leads to an increase in the render duration and is currently only feasible for offline rendering.
-A performance improvement should still be the result.
+This would improve physical accuracy since the scattering in media is actually wavelength dependent \cite{novak_overview}, but it requires a rewrite of the renderer.
+Since this increases the dimensionality of the integration domain it leads to longer render times and is currently only feasible for offline rendering.
+We should still be able to achieve an improvement of the render durations.
 
 Another interesting area of research would be to further improve the performance of our approach and possibly switch the \acsp{lod} on the fly.
 This would allow a camera movement without making the \acsp{lod} misalign the current view frustum.
@@ -15,7 +15,9 @@ The scene generator would have to be written in C++ for that and optimization of
 A substantial improvement can be expected by caching the free positions in the forest area, since we initialize the random number generator with the same seed anyway.
 However, this is limited to our forest scene.
 A more portable optimization would be to approximate the pixels a bounding box covers by a rectangle instead of the convex hull that we currently use.
-Also using brick grid for storing all voxel attributes like color values or the \ac{sggx} matrix $S$ might be worth investigating regarding the performance implications.
+We could further move the distance sampling from the ray generation shader to the intersection shader.
+This would most probably improve performance, since the \ac{bvh} is not traversed a second time in case of a null-collision.
+Also, using brick grid for storing all voxel attributes like color values or the \ac{sggx} matrix $S$ might be worth investigating regarding the performance implications.
 
 Having the knowledge that rough \acsp{lod} do not necessarily render faster than meshes, a further optimization would be to not simply set models outside of the view frustum to the roughest \ac{lod}.
 Instead, it might be beneficial to also incorporate the distance to the camera for these and use the mesh representations first.
