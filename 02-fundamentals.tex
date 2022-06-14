@@ -125,7 +125,7 @@ For a homogeneous medium the probability of hitting a particle is:
 \begin{equation*}
     F(t) = 1 - e^{\mu_t t},
 \end{equation*}
-since $\mu_t$ is constant in the whole medium \cite{novak_overview}.
+since $\mu_t$ is constant in the whole medium.
 After rearranging, this gives us a method to sample free path distances in homogeneous media:
 \begin{equation}
     \label{eq:distance_sampling}
@@ -137,7 +137,7 @@ However, distance sampling in heterogeneous media is more complex, since $\mu_t$
 We could interpret each voxel as a homogeneous medium and sample a target transmittance in the interval $(0, 1]$.
 We then have to accumulate the transmittance over all voxels that a ray passes until it falls below the target transmittance \cite{novak_overview}.
 This method is called \textit{regular tracking} \cite{sutton_regular_tracking}.
-The drawback is, that we have to compute intersections with every voxel along the ray which can be expensive for detailed volumes \cite{novak_overview}.
+The drawback is, that we have to compute intersections with every voxel along the ray, which can be expensive for detailed volumes \cite{novak_overview}.
 Another approach is called \textit{ray marching} \cite{perlin_hypertexture}, where we traverse the medium at a constant step size.
 Again, we accumulate the transmittance until it falls below a sampled target transmittance.
 This method can reduce the cost compared to regular tracking but introduces bias, since it assumes a constant density between each step \cite{novak_overview}.
@@ -212,12 +212,12 @@ Since we want our \acp{lod} to look similar to the corresponding mesh representa
 Instead, we choose the \acs{sggx} phase function \cite{sggx} because it provides scattering properties that match diffuse and specular \acsp{brdf}.
 It is particularly similar to microfacet models like the GGX \acs{brdf} \cite{ggx} which also led to the name \acf{sggx} \cite{sggx}.
 The idea behind the GGX \ac{brdf} and other microfacet models is that a surface can be modeled by a distribution of normals which describe the roughness of the surface at a certain point \cite{ggx}.
-Expanding on this idea, \citeauthor{microflake} \cite{microflake} introduced the microflake framework which models the medium as two-sided specularly reflecting flakes which are distributed according to a certain \ac{ndf}.
+Expanding on this idea, \citeauthor{microflake} \cite{microflake} introduced the microflake framework, which models the medium as two-sided specularly reflecting flakes, which are distributed according to a certain \ac{ndf}.
 \citeauthor{sggx} \cite{sggx} define the \ac{ndf} for the SGGX phase function as:
 \begin{equation*}
     D(\omega_m)=\frac{1}{\pi \sqrt{|S|}(\omega_m^T S^{-1} \omega_m)^2},
 \end{equation*}
-where $\omega_m$ is the direction of the microflake normal and $S$ is a 3 $\times$ 3 symmetric positive definite matrix which encodes the scattering properties \cite{sggx}.
+where $\omega_m$ is the direction of the microflake normal and $S$ is a 3 $\times$ 3 symmetric positive definite matrix which encodes the scattering properties.
 This matrix is computed from the GGX roughness value $\alpha$ and the normal $n$ of the surface it should represent as
 \begin{equation*}
     S=\begin{pmatrix}x^2 & xy & xz \\ xy & y^2 & yz \\ xz & yz & z^2\end{pmatrix} + \alpha^2\begin{pmatrix}y^2 + z^2 & -xy & -xz \\ -xy & x^2+z^2 & -yz \\ -xz & -yz & x^2+y^2\end{pmatrix},

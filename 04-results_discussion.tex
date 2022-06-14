@@ -6,13 +6,14 @@ We therefore measure the render time of our \ac{lod} approach and the mesh groun
 The image quality is mainly determined by comparing the results visually to the ground truth, but we also provide the mean \FLIP \cite{flip} error to quantify the difference.
 We choose this error because it gives a good approximation of the difference a human perceives when alternating between two images \cite{flip}.
 For the sake of completeness, we also provide the mean \ac{ssim} and the \ac{psnr} in Appendix \ref{chap:psnr_and_ssim_errors}.
-All images are rendered in our custom physically based path-tracer that we introduced in Section \ref{sec:rendering}.
+All images are rendered in our custom physically based path tracer that we introduced in Section \ref{sec:rendering}.
 We run the renderer on a system with an Intel Xeon E3-1230 v3 \ac{cpu}, 16 GB of RAM and a NVIDIA GeForce RTX 3060 \ac{gpu}.
-We performed experiments on the forest scene with 9924 trees, which we present in Section \ref{sec:forest} and on single model instances, which we discuss in Section \ref{sec:experiments_on_single_model_instances}.
+We performed experiments on the forest scene with 9924 trees, which we present in Section \ref{sec:experiments_on_the_forest_scene} and on single model instances, which we discuss in Section \ref{sec:experiments_on_single_model_instances}.
 For the forest scene, we additionally analyze the memory usage, when using \acsp{lod}.
+In all experiments the scene is illuminated by the \textit{Kloppenheim 06} environment map from Poly Haven \cite{envmap}.
 
 \section{Experiments on the Forest Scene}
-\label{sec:forest}
+\label{sec:experiments_on_the_forest_scene}
 As we explained, in Section \ref{sec:scene_generation} we choose our \acsp{lod} based on the heuristic that one voxel covers at most one pixel.
 Figure \ref{fig:render_comparison} shows a rendering of a scene that was generated with this heuristic compared to a reference rendering that uses only meshes.
 \begin{figure}[t]
@@ -110,7 +111,7 @@ However, looking at individual renderings of the diffuse and specular components
 \end{figure}
 In the volumes, the diffuse phase function gives way more uniform looking trees without these bright regions on the sun-facing side.
 The specular component gives discrete specular highlights on the surfaces while the specular phase function leads to reflections across the whole medium.
-So our approach fails in preserving the visual appearance of the meshes.
+So, our approach fails in preserving the visual appearance of the meshes.
 We identify two reasons for this limitation: First, the \ac{sggx} phase function is defined on the whole unit sphere (recall Figure \ref{fig:sggx_ndf}), which means that half of the rays are reflected into the medium where they are attenuated, while for surfaces all rays are reflected away from the surface.
 Second, it is likely that this error occurred due to the usage of an isotropic microflake projected area, which directly influences our density values.
 As we showed in Section \ref{sec:mesh_filtering} the optimization of the density depends on this projected area and by choosing a constant value we ignore for example how the roughness of a material influences the density, which would normally be reflected in the matrix $S$. % TODO: Maybe add example for effect of lowering roughness of leaves
@@ -133,7 +134,7 @@ Now we relax this restriction and measure render times when a voxel covers 1, 4,
 Additionally, we test how changing the voxel size of the finest \ac{lod} affects the performance.
 In the first experiment, the voxels in our finest \ac{lod} had a size of $\SI{0.1}{\m}$.
 Now we choose a minimal voxel size of $\SI{0.1}{\m}$, $\SI{0.2}{\m}$, $\SI{0.4}{\m}$, $\SI{0.8}{\m}$, $\SI{1.6}{\m}$, $\SI{3.2}{\m}$ and $\SI{6.4}{\m}$.
-In total this gives us 28 combinations.
+This gives us 28 combinations in total.
 % We visualize our measurements in Figure \ref{fig:render_durations} as a heat map.
 In Figure \ref{fig:lod_grid} we visualize the durations as well as the \FLIP error for rendering the different configurations with 1024 samples per pixel.
 \begin{figure}[t]
@@ -159,7 +160,7 @@ At the same time increasing the minimum voxel size for a fixed number of covered
 The meshes take longer to render than the rough \acsp{lod}, therefore the render time increases again.
 
 We get another view on the different combinations between the number of covered pixels and the minimum voxel size if we visualize the bounding boxes, like we previously did in Figure \ref{fig:visualize_lods}.
-Now we not only show a rendering from above the scene but also from the main camera perspective.
+Now we not only show a rendering from above the scene but also from the main camera's perspective.
 Figure \ref{fig:visualize_lods_different_configurations_covered_pixels_fixed} visualizes the previously described effect, that the distance at which \acsp{lod} are rendered increases, when the minimum voxel size is increased.
 \begin{figure}[t]
     \begin{subfigure}[b]{\linewidth}
@@ -233,9 +234,9 @@ We can further decrease the mean \FLIP error down to 0.031, for example, by choo
 
 The last experiment we perform on the forest scene analyzes the memory consumption of the different configurations of the number of covered pixels and the minimum voxel size.
 Since we use instancing of the geometry, texture and volume grids, the memory footprint between all configurations is roughly the same.
-But we can analyze how much memory is used if we would not use instancing.
-This gives us an idea, how our approach performs regarding memory consumption, if we had many distinct models in the scene, which is typical for feature films.
-This analysis could also be interesting if the scene's assets need to be streamed over a network and the load on the network has to be minimized.
+But we can analyze how much memory would be used if we didn't use instancing.
+This gives us an idea, how our approach would perform regarding memory consumption if we had many distinct models in the scene, which is typical for feature films.
+This analysis could also be interesting if the scene's assets had to be streamed over a network and the load on the network had to be minimized.
 Due to system limitations, we cannot render such scenes anymore, but it is enough to know the memory usage of each model's \ac{lod} and the distribution of the model's \acsp{lod} in a scene to obtain the total memory consumption.
 Without instancing, the reference scene would consume $\SI{830}{GB}$ of memory.
 As Figure \ref{fig:memory_usage} visualizes in the familiar heatmap, we can reduce this footprint, by choosing any of the different \ac{lod} configurations.
@@ -340,7 +341,7 @@ Another observation that we made during the single instance rendering is that th
 This is especially pronounced when rough \acsp{lod} are viewed from a close distance.
 Figure \ref{fig:rough_lods} shows the effect of the ray offsetting on the \acsp{lod} with a voxel size of $\SI{6.4}{\m}$.
 The voxel borders are clearly visible in these renderings, since the transmission of a ray is not updated by the offset.
-For close-up renderings of fine \acsp{lod} this artifact is less visible and in landscape scenes, like the forest scene from Section \label{sec:forest_experiments}, we were not able to perceive it.
+For close-up renderings of fine \acsp{lod} this artifact is less visible and in landscape scenes, like the forest scene from Section \ref{sec:experiments_on_the_forest_scene}, we were not able to perceive it at all.
 
 
 

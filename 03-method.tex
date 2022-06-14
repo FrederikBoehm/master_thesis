@@ -9,12 +9,11 @@ For our experiments, we follow the steps depicted in Figure \ref{fig:pipeline}.
     \label{fig:pipeline}
 \end{figure}
 We first take the surface meshes and apply the filtering procedure to obtain the volume grids.
-% Additionally, we save metadata like the bounding-box sizes of the grids, which we need for scene generation.
-Additionally, we save metadata like the bounding-box sizes of the grids, the positions of the eight bounding-box vertices or the number of voxels, which we need for scene generation.
+Additionally, we save metadata like the bounding-box sizes of the grids, which we need for scene generation.
 This generation step can either generate ground-truth scenes that only contain meshes or it can generate scenes that use \acp{lod}.
 We generate the scenes once and store the scene description to disk.
 The next step in the pipeline is the rendering of the scene, which uses mesh or volume files depending on the definitions in the generated scene file.
-Finally, we evaluate our results by comparing the mesh-only renderings with the ones that use \ac{lod}.
+Finally, we evaluate our results by comparing the mesh-only renderings with the ones that use \acsp{lod}.
 This is done regarding the image quality, the memory usage and the render performance.
 We are not interested in the absolute render times, but rather in the relative times between the mesh and volume representations.
 This final evaluation step is explained in Chapter \ref{chap:results_and_discussion}, while all other steps are subject of this chapter.
@@ -44,7 +43,7 @@ If the edge lengths of the mesh's bounding box do not evenly divide by the size 
 In each voxel we then sample the origin of our rays on a cubic uniform domain and the direction of the rays is uniformly sampled over the unit sphere.
 \citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to blurring since adjacent geometry is included in the density estimation.
 As \citeauthor{wang_object_space_aliasing} point out, this can reduce object space aliasing \cite{wang_object_space_aliasing}.
-However we think, that we can increase the spatial resolution while still minimizing object space aliasing by clipping the ray at a bounding sphere.
+However, we think, that we can increase the spatial resolution while still minimizing object space aliasing by clipping the ray at a bounding sphere.
 We position the sphere at the voxel's center and scale it such that its diameter is slightly larger than the diagonal of the voxel.
 Each ray is then first intersected with this sphere to compute a $t_{max}$, before intersecting it with the actual geometry.
 Figure \ref{fig:raygen_filtering} compares our approach for determining the ray length with the approach of \citeauthor{hybrid_mesh_volume_lods} \cite{hybrid_mesh_volume_lods}.
@@ -67,7 +66,7 @@ Figure \ref{fig:raygen_filtering} compares our approach for determining the ray 
 \end{figure}
 
 With these modifications we also have to solve a different integral than that from Equation \ref{eq:loubet_filtering_equation}.
-We therefore have to find a density $\rho$ that suffices:
+We now have to find a density $\rho$ that suffices:
 \begin{equation}
     1 - \frac{1}{4\pi}\int_{\mathcal{S}^2} e^{-\rho \, \sigma \, ray_l(\omega)} d\omega = P_{occ}.
     \label{eq:our_filtering_equation}
@@ -120,7 +119,7 @@ Note that since $S$ is a symmetric matrix, it is enough to store six coefficient
 Apart from storing the NanoVDB grid, we also store the brick grid, which only contains the density values of each voxel.
 In principle, it would be possible to store all voxel attributes in the brick grid, though the expected performance gain would not have been worth the implementation overhead.
 The lower cache coherency of using two grids only has a small impact on the performance, since we use the NanoVDB grid only after having sampled a collision with the brick grid.
-Besides the two grids, we also export metadata for every \ac{lod}, which encompasses the number of voxels in the grid and the bounding box dimensions during filtering.
+Besides the two grids, we also export metadata for every \ac{lod}, which encompasses the number of voxels in the grid, the positions of the eight bounding-box vertices and the bounding box dimensions during filtering.
 
 We generate 7 \acsp{lod} for voxel sizes from $\SI{0.1}{\m}$ to $\SI{6.4}{\m}$, doubling the size of a voxel for each \ac{lod}.
 The number of voxels is then computed from the voxel size and the size of the mesh.
@@ -128,7 +127,7 @@ We settled for these voxel sizes, as for smaller voxels the grid quickly exceeds
 Choosing even larger sizes has no effect, since some trees are already represented by a single voxel on the coarsest level.
 We cast 100 rays in each voxel to estimate the occlusion probability and optimize the density $\rho$ in 20 iterations. % TODO: Discuss dynamic number of rays depending on voxel size
 On average it takes $\SI{0.14}{\s}$ to filter a model and the resulting grids of all models occupy 940 MB of disk space, which is 260 MB less than what the mesh representations need.
-The finest \acsp{lod} are responsible for 65\% of occupied disk space.
+The finest \acsp{lod} are responsible for 65\% of the occupied disk space.
 In Chapter \ref{chap:results_and_discussion} we discuss how dropping this \ac{lod} affects image quality and rendering times.
 
 % Having the \acsp{lod}, Figure \ref{fig:lods_comparison} compares them to the surface representation for some models.
@@ -277,7 +276,7 @@ Thus, we have to compute the position of the origin in world space using:
 where $Scale$ is an additional scaling factor for controlling the size of the model.
 In our example, assuming a scaling of 1, this gives a location for the model of $Pos_{origin}=(-0.25, 0.5)$.
 
-If we generate a ground truth scene, meaning that it contains only mesh models, we can now add the model to the scene, else we now have to determine the appropriate \ac{lod} for the model given the distance to the camera.
+If we generate a ground truth scene, meaning that it contains only mesh models, we can now add the model to the scene, else we have to determine the appropriate \ac{lod} for the model given the distance to the camera.
 Knowledge of the camera position, gaze direction, the \ac{fov} and the sensor resolution are essential for that.
 Note that a consequence is, that this information is baked into the scene description and moving the camera during rendering leads to a mismatch of the \acp{lod}.
 Generating the scene in the renderer on the fly is currently no option.
@@ -300,14 +299,14 @@ We choose a faster approach that approximates this value and is depicted in Figu
     \centering
     \includegraphics[width=0.3\linewidth]{img/voxel_estimation.png}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
-    \caption[Estimation of intersected voxels]{We estimate the number of intersected voxels by shooting two rays which are perpendicular to the camera direction (plane normal). After intersecting them with the bounding box we can construct a rectangle (grey) whose area approximates the number of voxels intersected by a plane. The true value is different, since a plane intersecting a cube can produce anything from a triangular to a hexagonal area. In this example the green outline shows the shape of the ground truth.}
+    \caption[Estimation of intersected voxels]{We estimate the number of intersected voxels by shooting two rays which are perpendicular to the camera direction (plane normal). After intersecting them with the bounding box we can construct a rectangle (gray) whose area approximates the number of voxels intersected by a plane. The true value is different, since a plane intersecting a cube can produce anything from a triangular to a hexagonal area. In this example the green outline shows the shape of the ground truth.}
     \label{fig:voxel_estimation}
 \end{figure}
 From the center of the volume bounding box, we shoot a ray perpendicular to the camera direction horizontally.
 A second ray is shot in a direction perpendicular to the first ray and perpendicular to the direction towards the camera.
 We intersect the rays with the bounding box and transform the intersection distance into index space.
 In this space the distance gives us the number of voxels the rays passed.
-By multiplying the results from both rays we get the number of voxels a rectangle located at the bounding box center intersects.
+By multiplying the results from both rays, we get the number of voxels a rectangle located at the bounding box center intersects.
 The ground truth value for the number of intersected voxels by a plane can be different, since a plane intersecting a cube does not necessarily give a rectangle.
 However, we found that our approach closely approximates the true value.
 Having computed the number of voxels, we can now choose the coarsest \ac{lod} that still fulfills our heuristic and add it to our scene.
@@ -328,13 +327,13 @@ Additionally, we see the frustum of the camera: Within the view frustum we selec
 \section{Rendering}
 \label{sec:rendering}
 We render meshes and volumes using path tracing.
-Like our filtering implementation, our path-tracer is also \ac{gpu} accelerated using OptiX \cite{parker_optix}.
-This framework specifies a number of shaders that are called at different stages of the ray tracing pipeline.
+Like our filtering implementation, our path tracer is also \ac{gpu} accelerated using OptiX \cite{parker_optix}.
+This framework specifies a number of shaders that are called at different stages of the ray-tracing pipeline.
 The most important shaders for our usage are the ray generation shader, the intersection shader and the closest hit shader.
 The authors of OptiX suggest to use the ray generation shader for generating camera rays and the intersection shader for intersecting rays with custom geometry.
 The closest hit shader should be used for shading and tracing further rays \cite{parker_optix}.
 We use the ray generation shader for most computations, including shading.
-Our closest hit shader only reports the location of the hit to the ray generation shader.
+Our closest hit shader only reports the location of the hit to the ray generation shader where we then evaluate the scattering functions and sample new ray directions.
 This allowed us to easily build upon an existing renderer, that we previously used in another project.
 However, this approach can have an effect on the render performance.
 In particular, using the ray generation shader instead of the intersection shader for distance sampling in volumes can negatively influence performance.
@@ -358,7 +357,7 @@ Our lighting model is still a crude approximation of the light transport in leav
 \end{figure} 
 The models we use neither have a specular map nor a specular color associated in their materials.
 In order to still achieve the desired look, it is possible to simply set the specular color to white, leading to a loss of structural information in the highlights.
-Using the diffuse texture directly as a specular map results in colored highlights which does not match the highlights in Figure \ref{fig:leaf_gloss}.
+Using the diffuse texture directly as a specular map results in colored highlights, which does not match the highlights in Figure \ref{fig:leaf_gloss}.
 Therefore, we first compute the luminosity of the diffuse texture, which we then use as a specular map.
 Figure \ref{fig:leaf_renderings} shows renderings of this approach.
 \begin{figure}[t]
