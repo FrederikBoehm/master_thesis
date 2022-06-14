@@ -9,7 +9,8 @@ For our experiments, we follow the steps depicted in Figure \ref{fig:pipeline}.
     \label{fig:pipeline}
 \end{figure}
 We first take the surface meshes and apply the filtering procedure to obtain the volume grids.
-Additionally, we save metadata like the bounding-box sizes of the grids, which we need for scene generation.
+% Additionally, we save metadata like the bounding-box sizes of the grids, which we need for scene generation.
+Additionally, we save metadata like the bounding-box sizes of the grids, the positions of the eight bounding-box vertices or the number of voxels, which we need for scene generation.
 This generation step can either generate ground-truth scenes that only contain meshes or it can generate scenes that use \acp{lod}.
 We generate the scenes once and store the scene description to disk.
 The next step in the pipeline is the rendering of the scene, which uses mesh or volume files depending on the definitions in the generated scene file.
@@ -36,7 +37,9 @@ If the geometry, that should be represented by an isotropic medium, has a non-sp
 This error gets largest for planar geometry: A perfect plane is invisible when viewed parallelly, but it is opaque for perpendicular viewing directions.
 Despite this shortcoming of isotropic media, we choose them for the \acsp{lod}, because this greatly simplifies our optimization procedure during filtering, as well as the distance sampling and transmittance estimation during rendering.
 
-During filtering we place the voxel grid over the mesh and align it to three sides of the bounding box of the mesh.
+For filtering, a mesh is scaled to match the tree's natural size that is provided by XfrogPlants \cite{xfrogplants}.
+We then place the voxel grid over the mesh and align it to three sides of the bounding box of the mesh.
+The number of voxels in the grid is determined from the edge length of a voxel and the size of the mesh's bounding box.
 If the edge lengths of the mesh's bounding box do not evenly divide by the size of a voxel, we let the volume overlap on the non-aligned sides.
 In each voxel we then sample the origin of our rays on a cubic uniform domain and the direction of the rays is uniformly sampled over the unit sphere.
 \citeauthor{hybrid_mesh_volume_lods} use a ray length that is equal to the edge length of a voxel, which leads to blurring since adjacent geometry is included in the density estimation.
@@ -153,7 +156,8 @@ For a few selected models, we compare two of their \acsp{lod} with the surface r
     
         \begin{minipage}[c]{0.24\textwidth}
             \begin{flushleft}
-                Acer rubrum adult
+                Acer rubrum adult \\
+                (Height = $\SI{20.5}{\m}$)
             \end{flushleft}
         \end{minipage}
         \begin{minipage}[c]{0.24\textwidth}
@@ -168,7 +172,8 @@ For a few selected models, we compare two of their \acsp{lod} with the surface r
     
         \begin{minipage}[c]{0.24\textwidth}
             \begin{flushleft}
-                Acacia sophorae 9
+                Acacia sophorae 9 \\
+                (Height = $\SI{8}{\m}$)
             \end{flushleft}
         \end{minipage}
         \begin{minipage}[c]{0.24\textwidth}
@@ -183,7 +188,8 @@ For a few selected models, we compare two of their \acsp{lod} with the surface r
     
         \begin{minipage}[c]{0.24\textwidth}
             \begin{flushleft}
-                Celtis australis medium
+                Celtis australis medium \\
+                (Height = $\SI{9.5}{\m}$)
             \end{flushleft}
         \end{minipage}
         \begin{minipage}[c]{0.24\textwidth}
@@ -198,7 +204,8 @@ For a few selected models, we compare two of their \acsp{lod} with the surface r
     
         \begin{minipage}[c]{0.24\textwidth}
             \begin{flushleft}
-                Pinus muricata adult
+                Pinus muricata adult \\
+                (Height = $\SI{20}{\m}$)
             \end{flushleft}
         \end{minipage}
         \begin{minipage}[c]{0.24\textwidth}
@@ -211,7 +218,7 @@ For a few selected models, we compare two of their \acsp{lod} with the surface r
             \includegraphics[valign=c, width=\linewidth]{img/CL13a_0.8.png}
         \end{minipage}
     \end{center}
-    \caption[Comparison between mesh and volume renderings]{Comparison between the surface representation in the first column, the \ac{lod} with a voxel size of $\SI{0.1}{\m}$ in column two and the \ac{lod} with a voxel size of $\SI{0.8}{\m}$ in the last column.}
+    \caption[Comparison between mesh and volume renderings]{Comparison between the surface representation in the first column, the \ac{lod} with a voxel size of $\SI{0.1}{\m}$ in column two and the \ac{lod} with a voxel size of $\SI{0.8}{\m}$ in the last column. The heights of the trees are taken from XfrogPlants \cite{xfrogplants}.}
     \label{fig:lods_comparison}
 \end{figure}
 
@@ -291,9 +298,9 @@ Evaluating this, however, is really expensive since each voxel has to be tested 
 We choose a faster approach that approximates this value and is depicted in Figure \ref{fig:voxel_estimation}.
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.3\linewidth]{img/voxel_estimation.png} % TODO: Color error regions
+    \includegraphics[width=0.3\linewidth]{img/voxel_estimation.png}
     % \includesvg[pretex=\tiny, width=1.0\linewidth]{img/pipeline}
-    \caption[Estimation of intersected voxels]{We estimate the number of intersected voxels by shooting two rays which are perpendicular to the camera direction (plane normal). After intersecting them with the bounding box we can construct a rectangle whose area approximates the number of voxels intersected by a plane. The true value is different, since a plane intersecting a cube can produce anything from a triangular to a hexagonal area.}
+    \caption[Estimation of intersected voxels]{We estimate the number of intersected voxels by shooting two rays which are perpendicular to the camera direction (plane normal). After intersecting them with the bounding box we can construct a rectangle (grey) whose area approximates the number of voxels intersected by a plane. The true value is different, since a plane intersecting a cube can produce anything from a triangular to a hexagonal area. In this example the green outline shows the shape of the ground truth.}
     \label{fig:voxel_estimation}
 \end{figure}
 From the center of the volume bounding box, we shoot a ray perpendicular to the camera direction horizontally.
@@ -375,11 +382,13 @@ We combine the diffuse and microfacet \ac{brdf} using the Fresnel term $F$ \cite
 It evaluates to values close to one for grazing angles and to one when light hits the surface perpendicularly \cite{pbr}.
 For a layered surface, the effect of the diffuse reflection is biggest near perpendicular angles while specular reflection mostly is visible near grazing angles \cite{pbr}.
 We can therefore write our combined \ac{brdf} as:
-\begin{equation*}
+\begin{equation}
     f(\boldsymbol{x}, \omega_o, \omega_i) = F(n_{\boldsymbol{x}}, \omega_o)f_{spec}(\boldsymbol{x}, \omega_o, \omega_i) + (1 - F(n_{\boldsymbol{x}}, \omega_o))f_{diff}(\boldsymbol{x}, \omega_o, \omega_i).
-\end{equation*}
+    \label{eq:layered_brdf}
+\end{equation}
+For importance sampling this \ac{brdf}, we conditionally sample either $f_{spec}$ or $f_{diff}$ with probabilities $F$ or $1-F$, respectively.
 
-As described in Section \ref{subsec:solving_beer_lambert_law_in_heterogeneous_media}, we use brick grid by \citeauthor{brick_grid} \cite{brick_grid} to represent the density values of a volume.
+As described in Section \ref{subsec:solving_beer_lambert_law_in_heterogeneous_media}, we use the brick grid by \citeauthor{brick_grid} \cite{brick_grid} to represent the density values of a volume.
 The authors also provide an implementation of the distance sampling procedure they use \cite{brick_grid}, which we roughly follow.
 We use their distance sampling until we find an interaction and then perform a lookup in the NanoVDB grid to retrieve a filtered normal, diffuse and specular color, the index of refraction and the \ac{sggx} matrix $S$.
 Since our procedure returns the albedo at this point of the medium, we now have to compute which frequencies of the light are absorbed, which is given by the color.
@@ -387,8 +396,8 @@ In accordance with our surface rendering, we apply the Fresnel term to weight th
 Because the Fresnel term requires a surface normal, we now use the filtered normal that we also stored in the NanoVDB grid.
 We weight the specular color by $F$ and the diffuse color by $1-F$ to obtain our albedo.
 
-At each sampled interaction with the medium, we sample a new ray direction using the \ac{sggx} phase function.
-Again, we use the Fresnel term, this time to get a probability of whether we should sample the diffuse phase function or the specular phase function.
+Evaluation and sampling of the \ac{sggx} phase function in the medium is analogous to the surface case: We weight the specular phase function $f{}^{spec}_p$ by $F$ and the diffuse phase function $f{}^{diff}_p$ by $1-F$.
+For importance sampling, $F$ is again used as a probability to decide between sampling the diffuse or the specular phase function.
 Both phase functions rely on sampling a microflake normal from the \ac{sggx} \acl{vndf}.
 % In contrast to \citeauthor{sggx} \cite{sggx}, we do not align this microflake normal with the ray direction $\omega_o$, but with the filtered normal $n$.
 In contrast to \citeauthor{sggx} \cite{sggx}, we do not build a coordinate frame around the ray direction $\omega_o$, but we build it around the filtered normal $n$ to transform the microflake normal to world space.

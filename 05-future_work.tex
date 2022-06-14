@@ -9,6 +9,13 @@ This would improve physical accuracy since the scattering in media is actually w
 Since this increases the dimensionality of the integration domain it leads to longer render times and is currently only feasible for offline rendering.
 We should still be able to achieve an improvement of the render durations.
 
+Additionally, we could improve the quality of our volumetric representations.
+Currently, we use 100 rays in each voxel to filter a mesh.
+This is an appropriate number for small voxel sizes like $\SI{0.1}{\m}$ or $\SI{0.2}{\m}$.
+For large voxel sizes, like $\SI{3.2}{\m}$ or $\SI{6.4}{\m}$, this can lead to an undersampling, since the rays are further apart.
+Therefore, it would be worthwile to make the number of rays dependent on the volume of a voxel, to ensure a constant sampling density across all voxel sizes.
+It is difficult to predict the magnitude of this quality improvement, especially because the largest difference can be expected for the furthest \acsp{lod}.
+
 Another interesting area of research would be to further improve the performance of our approach and possibly switch the \acsp{lod} on the fly.
 This would allow a camera movement without making the \acsp{lod} misalign the current view frustum.
 The scene generator would have to be written in C++ for that and optimization of the program itself have to be made.

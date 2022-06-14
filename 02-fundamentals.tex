@@ -44,15 +44,17 @@ Path tracing then only samples one path from the root to a light source in this 
 Sampling only one path is a bad estimate of the integral, but when we repeat this process a large number of times we still get the same result as with using the recursive approach \cite{pbr}.
 Additionally, there are methods to reduce the variance of the paths like importance sampling or next event estimation.
 In short, importance sampling reduces variance by sampling from a distribution that has a similar shape like the integrand of Equation \ref{eq:render_equation} \cite{rendering_equation}.
-Next event estimation, on the other hand, computes the direct illumination from a light source at each path vertex \cite{pbr}.
+Thus, for importance sampling $L$ we could, for example, sample an environment map and mostly generate rays towards the sun, while importance sampling $f$ requires to preferably generate rays in directions where $f$ is large.
+Next event estimation, on the other hand, computes the direct illumination from a light source at each path vertex, by importance sampling this light source \cite{pbr}.
 \citeauthor{pbr} provide detailed explanations of these techniques \cite{pbr}.
 
 \section{Volumetric Path Tracing}
 The rendering equation introduced in Equation \ref{eq:render_equation} is only valid for light transport in a vacuum.
 Since we want to represent our \acsp{lod} by volumes, we now extend this formulation to be able to render heterogeneous volumes.
 Formally, volumes have a density ${\rho > \SI{0}{\frac{1}{\m^3}}}$ \cite{pbr}.
-Thus, $\rho$ gives us the number of particles in a unit volume \cite{novak_overview}.
-We store the density values at discrete regions of space, which are called \textit{voxels} \cite{pbr}.
+Thus, $\rho$ gives us the number of particles in a unit volume.
+Using a particle density allows us to model the particles statistically, instead of explicitly modeling every single particle \cite{novak_overview}.
+We store the density values in discrete regions of space, which are called \textit{voxels} \cite{pbr}.
 These voxels can then be arranged in three dimensional grids \cite{pbr}.
 Although it is conceptually helpful to think of volumes as these \textit{dense grids} it leads to redundant memory, since vacuum regions must still be stored.
 For example, if we approximate the volume of a sphere by a dense grid, $1 - \frac{V_{sphere}}{V_{cube}} = 1 - \frac{\frac{4}{3}r^3\pi}{(2r)^3}\approx \SI{48}{\%}$ of the voxels will store a density of zero.
